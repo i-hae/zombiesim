@@ -429,43 +429,43 @@
             #statsInputs { grid-template-columns: 1fr 1fr; }
 
             .sim-panel {
-                display: flex;
-                flex-direction: column;
-                height: calc(100vh - 60px); /* 탭 바 높이만큼 제외 */
-                overflow-y: hidden; /* sim-panel 자체는 스크롤되지 않음 */
-                overflow-x: hidden;
-                position: relative;
+                display: flex !important;
+                flex-direction: row !important;
+                overflow-x: auto !important;
+                scroll-snap-type: x mandatory;
+                gap: 0 !important;
+                height: calc(100vh - 60px);
+                -webkit-overflow-scrolling: touch;
             }
 
             .mobile-tab-bar { display: grid; }
 
             .status-board, .log-window, .relationship-board {
-                display: none; /* 기본적으로 숨김 */
+                display: none; /* 모바일에서는 기본적으로 숨김 */
                 width: 100%;
-                flex-grow: 1; /* 남은 수직 공간을 채우도록 함 */
-                height: calc(100vh - 120px); /* 탭 바(60px)와 컨트롤 영역(60px)을 제외한 높이 */
-                margin-bottom: 0; /* flex 컨테이너이므로 margin-bottom 제거 */
-                padding: 15px;
+                height: calc(100vh - 150px);
+                margin: 0;
+                padding: 15px 15px 100px 15px; /* 하단 버튼 공간 확보를 위한 패딩 */
                 box-sizing: border-box;
-                flex-direction: column; /* 내부 콘텐츠는 세로로 쌓음 */
-                overflow-y: auto; /* 내부 콘텐츠 세로 스크롤 */
-                overflow-x: hidden; /* 내부 콘텐츠 가로 스크롤 방지 */
+                overflow-y: auto;
+                overflow-x: hidden !important;
+                flex-direction: column;
+                position: absolute;
+                top: 0;
+                left: 0;
             }
+
             .status-board.active, .log-window.active, .relationship-board.active {
-                display: flex; /* 활성화된 탭만 표시 */
-                /* 활성화된 탭이 sim-panel의 남은 공간을 채우도록 함 */
+                display: flex;
             }
 
             .log-entry, .status-board .char-card, .relationship-board .char-card {
                 min-width: unset;
                 max-width: 100%;
-                flex-shrink: unset;
-                scroll-snap-align: unset;
+                flex-shrink: 0;
                 height: auto;
-                overflow-y: unset; /* 내부 스크롤이 아닌 부모 스크롤을 따르도록 */
                 border-bottom: none;
-                border-left: 4px solid var(--accent-color); /* 기존 스타일 유지 */
-                margin-bottom: 10px; /* 세로 간격 추가 */
+                border-left: 4px solid var(--accent-color);
             }
             .log-day-tag { display: block; width: 100%; margin: 10px 0; }
 
@@ -830,11 +830,24 @@
     }
 
     function switchTab(targetId, el) {
-        const target = document.getElementById(targetId);
-        target.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-        
+        // 모든 탭 패널 비활성화
+        const panels = ['logWindow', 'statusBoard', 'relationshipBoard'];
+        panels.forEach(id => {
+            document.getElementById(id).classList.remove('active');
+        });
+
+        // 선택한 패널 활성화
+        const targetPanel = document.getElementById(targetId);
+        targetPanel.classList.add('active');
+
+        // 탭 버튼 스타일 업데이트
         document.querySelectorAll('.tab-item').forEach(item => item.classList.remove('active'));
         el.classList.add('active');
+
+        // 로그 창의 경우 최신 로그를 보여주기 위해 하단으로 스크롤
+        if (targetId === 'logWindow') {
+            targetPanel.scrollTop = targetPanel.scrollHeight;
+        }
     }
     // --- 사운드 매니저 (Web Audio API) ---
     const SoundManager = {
