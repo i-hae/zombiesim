@@ -318,7 +318,7 @@
             background: #0a0a0a;
             padding: 25px;
             border-radius: 8px;
-            overflow-y: auto;
+            overflow-y: scroll;
             font-family: 'Pretendard', sans-serif;
             border: 1px solid #222;
             color: #bbb;
@@ -392,6 +392,53 @@
         ::-webkit-scrollbar-track { background: #111; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #444; }
+
+        /* --- 모바일 반응형 스타일 --- */
+        @media (max-width: 850px) {
+            body { overflow-y: auto; height: auto; }
+            .container { height: auto; padding: 10px; display: block; overflow-y: auto; }
+            
+            h1 { font-size: 1.5em; }
+            
+            .intro-panel { padding: 20px; width: 100%; box-sizing: border-box; }
+            .selection-grid { flex-wrap: wrap; }
+            .selection-card { min-width: 100px; padding: 10px; }
+
+            .setup-panel { flex-direction: column; gap: 20px; height: auto; }
+            .setup-left { flex: none; width: 100%; }
+            .setup-right { flex: none; width: 100%; border-left: none; border-top: 1px solid #444; padding-left: 0; padding-top: 20px; }
+            #statsInputs { grid-template-columns: 1fr 1fr; } /* 모바일에서는 2열로 */
+
+            .sim-panel {
+                display: flex;
+                flex-direction: column;
+                height: auto;
+                gap: 15px;
+            }
+
+            .log-window { 
+                order: 1; /* 로그를 가장 위로 */
+                height: 450px; 
+                padding: 15px;
+            }
+            .status-board { 
+                order: 2; 
+                height: 400px; 
+            }
+            .relationship-board { 
+                order: 3; 
+                height: 300px; 
+            }
+            .control-area { 
+                order: 4; 
+                position: sticky; 
+                bottom: 0; 
+                background: var(--bg-color); 
+                padding: 10px 0; 
+                z-index: 100;
+            }
+            .btn-start { margin-bottom: 20px; }
+        }
     </style>
 </head>
 <body>
@@ -1343,7 +1390,7 @@
                     <div class="stat-bar-container"><div class="stat-bar" style="width:${c.states.hp}%; background:${hpColor};"></div></div>
                 </div>
                 <div style="margin-top:5px; font-size:0.75em; color:#3498db; background:rgba(0,0,0,0.3); padding:4px; border-radius:4px;">
-                    🎒 🩹x${c.inventory.medkit} 🍞x${c.inventory.food} 💧x${c.inventory.water} 💊x${c.inventory.sedative} ⚡x${c.inventory.energyDrink} x${c.inventory.chocolate}
+                    🎒 🩹x${c.inventory.medkit} 🍞x${c.inventory.food} 💧x${c.inventory.water} 💊x${c.inventory.sedative} ⚡x${c.inventory.energyDrink} 🍫x${c.inventory.chocolate}
                 </div>
                 <div style="margin-top:5px; font-size:0.8em; color:#f1c40f; padding: 2px 0;">
                     ⚔️ 장비: <strong>${weapon.icon} ${weapon.name}</strong>
