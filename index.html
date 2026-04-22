@@ -429,12 +429,12 @@
             #statsInputs { grid-template-columns: 1fr 1fr; }
 
             .sim-panel {
-                display: flex; /* 자식 요소들을 관리하기 위해 flex 사용 */
-                flex-direction: column; /* 자식 요소들을 세로로 쌓음 */
-                height: calc(100vh - 40px); /* 모바일 높이 조정 */
-                gap: 15px; /* 요소들 간의 간격 */
-                overflow-x: hidden; /* 가로 스크롤 방지 */
-                overflow-y: auto; /* 세로 스크롤 허용 */
+                display: flex;
+                flex-direction: column;
+                height: calc(100vh - 60px); /* 탭 바 높이만큼 제외 */
+                overflow-y: hidden; /* sim-panel 자체는 스크롤되지 않음 */
+                overflow-x: hidden;
+                position: relative;
             }
 
             .mobile-tab-bar { display: grid; }
@@ -442,8 +442,9 @@
             .status-board, .log-window, .relationship-board {
                 display: none; /* 기본적으로 숨김 */
                 width: 100%;
-                height: calc(100vh - 180px); /* 탭 바와 컨트롤 영역을 고려한 높이 */
-                margin-bottom: 80px; /* 탭 바와 컨트롤 영역을 위한 여백 */
+                flex-grow: 1; /* 남은 수직 공간을 채우도록 함 */
+                height: calc(100vh - 120px); /* 탭 바(60px)와 컨트롤 영역(60px)을 제외한 높이 */
+                margin-bottom: 0; /* flex 컨테이너이므로 margin-bottom 제거 */
                 padding: 15px;
                 box-sizing: border-box;
                 flex-direction: column; /* 내부 콘텐츠는 세로로 쌓음 */
@@ -452,16 +453,17 @@
             }
             .status-board.active, .log-window.active, .relationship-board.active {
                 display: flex; /* 활성화된 탭만 표시 */
+                /* 활성화된 탭이 sim-panel의 남은 공간을 채우도록 함 */
             }
 
             .log-entry, .status-board .char-card, .relationship-board .char-card {
-                min-width: unset; /* 가로 카드 스타일 제거 */
-                max-width: 100%; /* 가로 카드 스타일 제거 */
-                flex-shrink: unset; /* 가로 카드 스타일 제거 */
-                scroll-snap-align: unset; /* 가로 카드 스타일 제거 */
-                height: auto; /* 가로 카드 스타일 제거 */
-                overflow-y: auto; /* 가로 카드 스타일 제거 */
-                border-bottom: none; /* 가로 카드 스타일 제거 */
+                min-width: unset;
+                max-width: 100%;
+                flex-shrink: unset;
+                scroll-snap-align: unset;
+                height: auto;
+                overflow-y: unset; /* 내부 스크롤이 아닌 부모 스크롤을 따르도록 */
+                border-bottom: none;
                 border-left: 4px solid var(--accent-color); /* 기존 스타일 유지 */
                 margin-bottom: 10px; /* 세로 간격 추가 */
             }
