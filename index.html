@@ -315,7 +315,7 @@
         .log-window {
             grid-column: 2;
             grid-row: 1;
-            background: #121212;
+            background: #0a0a0a;
             padding: 25px;
             border-radius: 8px;
             overflow-y: auto;
@@ -370,6 +370,18 @@
             border: 1px solid #333;
         }
 
+        /* 토글 버튼 스타일 */
+        .toggle-group { display: flex; gap: 5px; }
+        .toggle-item {
+            flex: 1; padding: 8px; background: #111; border: 1px solid var(--border-color);
+            text-align: center; cursor: pointer; border-radius: 4px; font-size: 0.85em; transition: 0.2s;
+            display: flex; align-items: center; justify-content: center; color: #888;
+        }
+        .toggle-item:hover { background: #222; border-color: #555; }
+        .toggle-item.active { 
+            background: rgba(52, 152, 219, 0.2); border-color: var(--info-color); color: var(--info-color); font-weight: bold;
+        }
+
         strong {
             font-weight: 600; /* SemiBold 적용 */
             color: #ffffff;  /* 일반 텍스트(#bbb)보다 밝게 설정하여 강조 */
@@ -413,7 +425,11 @@
         <div id="stepDifficulty" class="intro-step hidden">
             <h2 style="margin-bottom: 30px; font-size: 1.2em; color: #fff;">생존 난이도를 선택하십시오</h2>
             <div class="selection-grid">
-                <div class="selection-card" onclick="selectDifficulty(-10, this)">
+                <div class="selection-card" onclick="selectDifficulty(-40, this)">
+                    <div class="card-title" style="color: #2ecc71;">매우 쉬움</div>
+                    <div class="card-desc">위험이 거의 없음</div>
+                </div>
+                <div class="selection-card" onclick="selectDifficulty(-20, this)">
                     <div class="card-title" style="color: var(--success-color);">쉬움</div>
                     <div class="card-desc">상대적으로 안전함</div>
                 </div>
@@ -426,7 +442,7 @@
                     <div class="card-desc">매우 위험함</div>
                 </div>
                 <div class="selection-card" onclick="selectDifficulty(40, this)">
-                    <div class="card-title" style="color: var(--accent-color);">지옥</div>
+                    <div class="card-title" style="color: var(--accent-color);">매우 어려움</div>
                     <div class="card-desc">절망적인 상황</div>
                 </div>
             </div>
@@ -440,45 +456,45 @@
             <h2>👥 대원 모집 및 상태 설정</h2>
             <div id="charInputs">
                 <div style="display: flex; gap: 15px;">
-                    <div class="input-group" style="flex: 3;">
+                    <div class="input-group" style="flex: 2;">
                         <label>이름</label>
                         <div style="display: flex; gap: 5px;">
                         <input type="text" id="inputName" placeholder="캐릭터 이름">
-                        <button class="btn" style="margin: 0; width: 120px; font-size: 0.8em; background: #555;" onclick="generateRandomName()">🎲 이름 생성</button>
+                        </div>
+                    </div>
+                    <div class="input-group" style="flex: 1.5;">
+                        <label>성별</label>
+                        <div class="toggle-group" id="gender-toggle">
+                            <div class="toggle-item active" onclick="setToggle(this, 'gender', '男')">男</div>
+                            <div class="toggle-item" onclick="setToggle(this, 'gender', '女')">女</div>
                         </div>
                     </div>
                     <div class="input-group" style="flex: 1;">
-                        <label>성별 / 나이</label>
-                        <div style="display: flex; gap: 5px;">
-                            <select id="inputGender">
-                                <option value="男">男 (남)</option>
-                                <option value="女">女 (여)</option>
-                            </select>
-                            <input type="number" id="inputAge" value="25" min="1" max="100">
-                        </div>
+                        <label>나이</label>
+                        <input type="number" id="inputAge" value="25" min="1" max="100" style="text-align: center;">
                     </div>
                 </div>
                 <div id="statsInputs"></div>
                 
-                <div class="input-group" style="margin-top: 15px;">
-                    <label style="font-size: 0.8em; color: #888;">성격 유형 (MBTI)</label>
-                    <div style="display: flex; gap: 5px;">
-                        <select id="mbti-ie" style="padding: 4px; font-size: 0.8em;">
-                            <option value="I">I (내향)</option>
-                            <option value="E">E (외향)</option>
-                        </select>
-                        <select id="mbti-sn" style="padding: 4px; font-size: 0.8em;">
-                            <option value="S">S (감각)</option>
-                            <option value="N">N (직관)</option>
-                        </select>
-                        <select id="mbti-tf" style="padding: 4px; font-size: 0.8em;">
-                            <option value="T">T (사고)</option>
-                            <option value="F">F (감정)</option>
-                        </select>
-                        <select id="mbti-jp" style="padding: 4px; font-size: 0.8em;">
-                            <option value="J">J (판단)</option>
-                            <option value="P">P (인식)</option>
-                        </select>
+                <div class="input-group" style="margin-top: 10px;">
+                    <label style="font-size: 0.85em; color: #888; margin-bottom: 8px;">성격 유형 (MBTI)</label>
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+                        <div class="toggle-group mbti-toggle" data-type="ie">
+                            <div class="toggle-item active" onclick="setToggle(this, 'ie', 'I')">I</div>
+                            <div class="toggle-item" onclick="setToggle(this, 'ie', 'E')">E</div>
+                        </div>
+                        <div class="toggle-group mbti-toggle" data-type="sn">
+                            <div class="toggle-item active" onclick="setToggle(this, 'sn', 'S')">S</div>
+                            <div class="toggle-item" onclick="setToggle(this, 'sn', 'N')">N</div>
+                        </div>
+                        <div class="toggle-group mbti-toggle" data-type="tf">
+                            <div class="toggle-item active" onclick="setToggle(this, 'tf', 'T')">T</div>
+                            <div class="toggle-item" onclick="setToggle(this, 'tf', 'F')">F</div>
+                        </div>
+                        <div class="toggle-group mbti-toggle" data-type="jp">
+                            <div class="toggle-item active" onclick="setToggle(this, 'jp', 'J')">J</div>
+                            <div class="toggle-item" onclick="setToggle(this, 'jp', 'P')">P</div>
+                        </div>
                     </div>
                 </div>
 
@@ -486,7 +502,7 @@
                     <div id="survivalRateDisplay">예상 생존율: 50%</div>
                     <div style="font-size: 0.7em; margin-top: 5px; opacity: 0.7;">* 모든 능력치의 평균과 가중치를 기반으로 산출된 값입니다.</div>
                 </div>
-                <button class="btn" style="background: #444; margin-top: 15px;" onclick="randomizeStats()">🎲 랜덤 스탯 설정</button>
+                <button class="btn" style="background: #444; margin-top: 15px;" onclick="randomizeStats()">🎲 랜덤 캐릭터 설정</button>
                 <button class="btn btn-add" onclick="addCharacter()">분대에 추가 (+)</button>
             </div>
         </div>
@@ -511,31 +527,38 @@
 
 <script>
     // --- 데이터 정의 ---
-    const STAT_NAMES = [
-        "시력", "청력", "체력", "면역력", "근력", "속도", 
-        "순발력", "지능", "행동력", "정신력", "인내력", "사교성", "판단력"
-    ];
+    const STAT_NAMES = ["시력", "청력", "체력", "면역력", "근력", "속도", "순발력", "지능", "행동력", "정신력", "인내력", "사교성", "판단력"];
+
+    const WEAPON_TYPES = {
+        'none': { name: '맨손', icon: '👊', combat: 0, detect: 0, escape: 0 },
+        'knife': { name: '단검', icon: '🔪', combat: 10, detect: 10, escape: 0 },
+        'bat': { name: '야구배트', icon: '🏏', combat: 20, detect: 0, escape: 0 },
+        'pipe': { name: '쇠파이프', icon: '🦯', combat: 25, detect: 0, escape: -5 },
+        'axe': { name: '소방도끼', icon: '🪓', combat: 35, detect: 0, escape: -10 },
+        'slingshot': { name: '새총', icon: '🎯', combat: 15, detect: 30, escape: 0 }
+    };
 
     const SURNAMES = ["김", "이", "박", "최", "정", "강", "조", "윤", "장", "임", "한", "오", "서", "신", "권", "황", "안", "송", "전", "홍", "유", "고", "문", "양", "손", "배", "백", "허", "남", "심", "노", "하", "곽", "성", "차", "주", "우", "구", "라", "민", "진", "지", "엄", "채", "원", "천", "방", "공", "현", "함", "변", "염", "양", "여", "추", "노", "도", "소", "신", "석", "선", "설", "마", "길", "연", "위", "표", "명", "기", "반", "왕", "금", "옥", "육", "인", "맹", "제", "탁", "견", "국", "어", "은", "편", "계", "봉", "가", "복", "사", "점", "상", "판", "독", "팽", "승", "간", "형", "단", "제갈", "사공", "선우", "독고", "남궁"];
     const GIVEN_NAMES = ["민준", "서연", "도윤", "서윤", "시우", "하은", "지호", "지유", "준서", "지민", "유준", "채원", "준우", "윤아", "건우", "서준", "예준", "주원", "하준", "지후", "현우", "도현", "지우", "서현", "하윤", "민서", "지아", "은서", "다은", "예은", "수빈", "재윤", "혜원", "지원", "정현", "경호", "상욱", "영진", "성민", "다혜", "소영", "은지", "지훈", "혜진", "태웅", "동현", "태양", "승우", "가영", "미경", "영호", "준호", "성희", "영희", "민수", "광수", "태현", "지현", "수아", "서영", "민경", "유나", "예린", "민호", "시연", "은우", "도하", "태민", "유빈", "시안", "하린", "준영", "정원", "서진", "예성", "민주", "예담", "도아", "윤재", "지온", "예슬", "연우", "다온", "하람", "준혁", "서우", "채아", "지한", "소윤", "다인", "선우", "리안", "소울", "하율", "서하", "이안", "수민", "연지", "수윤", "아인", "시아", "소미", "유민", "소희", "주하", "민아", "예서", "재현", "서아", "수호", "도훈", "은율", "지율", "지안", "지효", "시후", "민규", "서원", "윤후", "찬우", "정혁", "승민", "혜민", "성준", "상현", "상우", "정호", "지석", "민재", "재호", "건호", "승호", "찬영", "재원", "도원", "승원", "성훈", "정훈", "동욱", "경민", "정윤", "윤지", "예지", "예나", "나영", "미소", "희진", "효림", "소담", "다빈", "다영", "유정", "현주", "민하", "정인", "혜주", "미나", "소민", "서희", "다현", "가온", "지성", "성현", "명훈", "경태", "상원", "용빈", "정빈", "광호", "명호", "철수", "영수", "명수", "진우", "찬혁", "수현", "승찬", "명준", "성빈", "준희", "민희", "은희", "선희", "미희", "주희", "연주", "보미", "예빈", "예솔", "소연", "혜영", "지혜", "수진", "현정", "은정", "미정", "선영", "윤서", "정은", "다희", "리아", "하진", "주안", "세아", "세연", "유은", "하경", "소하", "유린", "정아", "소은", "소율", "채윤", "온유", "라온", "주아", "하아", "리하", "로아", "루아", "하라", "리라", "다라", "보경", "재경", "서경", "나경", "지경", "인경", "정경", "현경", "혜경", "승경", "성경", "연경", "유리", "지리", "아리", "소리", "다리", "보리", "혜리", "나리", "수리", "효리", "현진", "은진", "명진", "서진", "정진", "광진", "태진", "범진", "석진", "성진", "상진", "하영", "민영", "신영", "보영", "미영", "현영", "명영", "광영", "태영", "수영", "도영", "재영", "승영", "하빈", "예빈", "지빈", "소빈", "주빈", "정빈", "가빈", "나빈", "민빈", "은빈", "유빈", "현빈", "수빈", "도빈", "재빈", "승빈", "우빈", "하민", "서민", "채민", "예민", "가민", "나민", "민민", "은민", "유민", "현민", "수민", "도민", "재민", "승민", "우민", "윤호", "동준", "성철", "상철", "병준", "병훈", "대현", "도겸", "해인", "유찬", "찬희", "동휘", "시온", "우준", "태준", "현승", "시현", "지웅", "재희", "승재", "민건", "시완", "도영", "재아", "유아", "윤주", "수아", "정윤", "채연", "지혜", "미래", "소리", "다솜", "세나", "지우", "지율", "윤슬", "하울", "미서", "가을", "겨울", "하늘", "바람", "여울", "마루", "누리", "다온", "가온", "라온", "아라", "시원", "보람", "슬기", "아름", "새롬", "초롱", "진주", "유리", "송이", "송하", "연하", "윤하", "은하", "단우", "진하", "준하", "명하", "상하", "정하", "주하", "도경", "유경", "윤경", "민경", "효경", "성경", "상경", "진경", "명경", "태경", "수경", "휘경", "원경", "연우", "선우", "연서", "연지", "연아", "연수", "연우", "연재", "연주", "연희", "연호", "연후", "태연", "서연", "지연", "나연", "수연", "주연", "소연", "가연", "도연", "재연", "미연", "정연", "채연", "혜연", "효연", "승연", "시연", "예연", "하연", "나은", "다은", "하은", "예은", "지은", "성은", "정은", "효은", "채은", "소은", "가은", "나은", "혜은", "유은", "재은", "미은", "선은", "수은", "시은", "태은", "도은", "주은", "윤은", "영은", "민은"];
 
     const DIALOGUES = {
         combat: {
-            T: ["가장 효율적인 사격 각도를 찾아야 해.", "탄약 낭비하지 마. 침착해."],
-            F: ["모두 제발 다치지 마세요!", "무서워... 누가 좀 도와줘!"],
-            E: ["내가 주의를 끌게! 지금이야!", "다 같이 밀어붙이자!"],
-            I: ["...조용히 숨을 고르자.", "하아, 하아... 제발 오지 마."],
+            T: ["가장 효율적인 사격 각도를 찾아야 해.", "탄약 낭비하지 마. 침착해.", "약점은 머리다. 조준해."],
+            F: ["모두 제발 다치지 마세요!", "무서워... 누가 좀 도와줘!", "우리가 살아남을 수 있을까?"],
+            E: ["내가 주의를 끌게! 지금이야!", "다 같이 밀어붙이자!", "물러서지 마! 우리가 이길 수 있어!"],
+            I: ["...조용히 숨을 고르자.", "하아, 하아... 제발 오지 마.", "(소리 없이 무기를 고쳐 잡는다)"],
             default: ["전부 죽여버리겠어!", "내 뒤에서 떨어지지 마!"]
         },
         search: {
-            S: ["구석구석 꼼꼼히 뒤져보자.", "유통기한 지난 건 버려."],
-            N: ["왠지 여기에 중요한 게 있을 것 같아.", "이 장소, 뭔가 위화감이 들어."],
-            P: ["뭐든 나오면 다행이지.", "일단 대충 훑고 이동하자."],
+            S: ["구석구석 꼼꼼히 뒤져보자.", "유통기한 지난 건 버려.", "여기 먼지 쌓인 상자가 있어."],
+            N: ["왠지 여기에 중요한 게 있을 것 같아.", "이 장소, 뭔가 위화감이 들어.", "직감상 여기 뭔가 숨겨져 있어."],
+            P: ["뭐든 나오면 다행이지.", "일단 대충 훑고 이동하자.", "운 좋으면 뭐라도 걸리겠지."],
             default: ["뭐라도 좀 나왔으면 좋겠는데.", "조용히 해, 소리가 나면 끝장이야."]
         },
         conflict: {
             T: ["감정적으로 굴지 마. 생존이 우선이야.", "네 논리는 지금 상황에 안 맞아."],
             F: ["어떻게 그렇게 심한 말을 할 수 있어?", "우리끼리 이러면 안 되잖아..."],
+            J: ["계획대로만 움직였어도 이런 일은 없었어.", "규칙을 지켜야 공멸하지 않아."],
             default: ["너 때문에 우리 다 죽게 생겼어!", "왜 나한테만 그래?"]
         },
         bonding: {
@@ -573,6 +596,7 @@
     let selectedLoc = LOCATIONS.school; // 기본값
     let difficultyMod = 0; // 기본값
     let gameActive = false;
+    let escapeRouteDiscovered = false; // 탈출 경로 발견 여부
 
     // --- UI 초기화 ---
     function initStatsUI() {
@@ -729,6 +753,19 @@
                 el.closest('.input-group').querySelector('.stat-value').innerText = val;
             }
         });
+
+        // 이름 랜덤화
+        generateRandomName();
+
+        // 성별 랜덤화
+        const genderVal = Math.random() < 0.5 ? '男' : '女';
+        const genderGroup = document.getElementById('gender-toggle');
+        const genderTarget = Array.from(genderGroup.querySelectorAll('.toggle-item')).find(i => i.innerText === genderVal);
+        if (genderTarget) setToggle(genderTarget, 'gender', genderVal);
+
+        // 나이 랜덤화 (10~70세)
+        document.getElementById('inputAge').value = Math.floor(Math.random() * 61) + 10;
+
         updateSurvivalRate();
         randomizeMbti(); // MBTI도 함께 랜덤화
     }
@@ -827,6 +864,7 @@
                 hp: 100, fatigue: 0, fear: 0, hunger: 0, thirst: 0, infection: 0,
                 status: 'alive' // alive, dead, zombie, escaped
             },
+            inventory: { medkit: 0, food: 0, water: 0, weapon: 'none', sedative: 0, energyDrink: 0, chocolate: 0 },
             effects: [], // 장기 지속 효과 (부상, 질병 등)
             trust: {}, // 타 캐릭터와의 신뢰도
             mbti: setupState.ie + setupState.sn + setupState.tf + setupState.jp // MBTI 유형 저장
@@ -862,11 +900,16 @@
         document.getElementById('setupPanel').classList.remove('hidden');
     }
 
-    function log(html) {
+    function log(content, type = '') {
         const win = document.getElementById('logWindow');
+        if (!win) return;
         const temp = document.createElement('div');
-        temp.innerHTML = html.trim();
-        const el = temp.firstChild;
+        if (content.startsWith('<div')) {
+            temp.innerHTML = content.trim();
+        } else {
+            temp.innerHTML = `<div class="log-entry ${type}">${content}</div>`;
+        }
+        const el = temp.firstElementChild;
         win.appendChild(el);
         win.scrollTop = win.scrollHeight;
         return el;
@@ -901,8 +944,176 @@
         return duration;
     }
 
+    // 아이템 자동 사용 로직
+    function autoUseItems(char) {
+        const mbti = char.mbti;
+        const healBonus = mbti.includes('T') ? 1.5 : 1.0;
+
+        if (char.states.hp < 50 && char.inventory.medkit > 0) {
+            char.inventory.medkit--;
+            char.states.hp = Math.min(100, char.states.hp + (30 * healBonus));
+            char.effects = char.effects.filter(e => e.name !== "골절 부상");
+            log(`<div class="log-entry system" style="color: #2ed573;">💊 ${char.name}이(가) 구급상자를 사용하여 체력을 회복했습니다.</div>`);
+        }
+        if (char.states.hunger > 60 && char.inventory.food > 0) {
+            char.inventory.food--;
+            char.states.hunger = Math.max(0, char.states.hunger - 50);
+            log(`<div class="log-entry system" style="color: #3498db;">🍞 ${char.name}이(가) 식량을 섭취했습니다.</div>`);
+        }
+        if (char.states.thirst > 60 && char.inventory.water > 0) {
+            char.inventory.water--;
+            char.states.thirst = Math.max(0, char.states.thirst - 50);
+            log(`<div class="log-entry system" style="color: #3498db;">💧 ${char.name}이(가) 물을 마셨습니다.</div>`);
+        }
+        if (char.states.fear > 60 && char.inventory.sedative > 0) {
+            char.inventory.sedative--;
+            char.states.fear = Math.max(0, char.states.fear - 40);
+            log(`<div class="log-entry system" style="color: #a29bfe;">💊 ${char.name}이(가) 정신 안정제를 복용하여 두려움을 진정시켰습니다.</div>`);
+        }
+        if (char.states.fatigue > 60 && char.inventory.energyDrink > 0) {
+            char.inventory.energyDrink--;
+            char.states.fatigue = Math.max(0, char.states.fatigue - 40);
+            log(`<div class="log-entry system" style="color: #f1c40f;">⚡ ${char.name}이(가) 에너지 드링크를 마셔 피로를 해소했습니다.</div>`);
+        }
+        if (char.states.fear > 40 && char.inventory.chocolate > 0) {
+            char.inventory.chocolate--;
+            char.states.fear = Math.max(0, char.states.fear - 20);
+            log(`<div class="log-entry system" style="color: #e17055;">🍫 ${char.name}이(가) 달콤한 초콜릿을 먹으며 두려움을 잊어봅니다.</div>`);
+        }
+    }
+
+    // 동료끼리 아이템을 나눠주거나 도와주는 로직
+    async function checkHelpingOthers(target) {
+        if (target.states.status !== 'alive') return;
+        
+        // 살아있는 다른 대원들 필터링
+        const potentialDonors = characters.filter(c => c.id !== target.id && c.states.status === 'alive');
+
+        for (const donor of potentialDonors) {
+            const trustVal = (donor.trust[target.id] || 50);
+            // 감정형(F)은 더 낮은 신뢰도에서도 도움을 주려 함
+            const threshold = donor.mbti.includes('F') ? 40 : 65; 
+
+            if (trustVal < threshold) continue;
+
+            // 1. 치료 지원 (HP가 낮고 구급상자가 없을 때)
+            if (target.states.hp < 40 && target.inventory.medkit === 0 && donor.inventory.medkit > 0) {
+                donor.inventory.medkit--;
+                const healBonus = donor.mbti.includes('T') ? 1.5 : 1.0;
+                target.states.hp = Math.min(100, target.states.hp + (30 * healBonus));
+                target.effects = target.effects.filter(e => e.name !== "골절 부상");
+                
+                log(`<div class="log-entry rest" style="border-left-color: var(--success-color); background: rgba(46, 213, 115, 0.1);">
+                    <span class="log-char-name">🤝 도움: ${donor.name} → ${target.name}</span>
+                    <div class="log-situation">${donor.name}이(가) 심한 부상을 입은 ${target.name}을(를) 보고 자신의 구급상자를 꺼내 직접 응급처치를 해주었습니다.</div>
+                    <div class="log-result" style="color: var(--success-color);">${target.name}의 체력이 회복되었고, 깊은 유대감을 느낍니다.</div>
+                </div>`);
+                target.trust[donor.id] = Math.min(100, (target.trust[donor.id] || 50) + 20);
+                await sleep(500);
+                return; // 하루에 한 번만 대대적인 도움을 주고받음
+            }
+
+            // 2. 피로 해소 지원 (피로도가 높고 드링크가 없을 때)
+            if (target.states.fatigue > 70 && target.inventory.energyDrink === 0 && donor.inventory.energyDrink > 0) {
+                donor.inventory.energyDrink--;
+                target.states.fatigue = Math.max(0, target.states.fatigue - 30);
+                log(`<div class="log-entry rest" style="border-left-color: #f1c40f; background: rgba(241, 196, 15, 0.1);">
+                    <span class="log-char-name">⚡ 지원: ${donor.name} → ${target.name}</span>
+                    <div class="log-situation">${donor.name}이(가) 지쳐 쓰러지기 직전인 ${target.name}에게 에너지 드링크를 건넸습니다.</div>
+                </div>`);
+                target.trust[donor.id] = Math.min(100, (target.trust[donor.id] || 50) + 10);
+                await sleep(500);
+                return;
+            }
+
+            // 3. 식량/생필품 나눔 (매우 배고프거나 갈증이 심할 때)
+            if ((target.states.hunger > 80 && donor.inventory.food > 0) || (target.states.thirst > 80 && donor.inventory.water > 0)) {
+                let itemUsed = "";
+                if (target.states.hunger > 80 && donor.inventory.food > 0) {
+                    donor.inventory.food--;
+                    target.states.hunger = Math.max(0, target.states.hunger - 40);
+                    itemUsed = "음식";
+                } else {
+                    donor.inventory.water--;
+                    target.states.thirst = Math.max(0, target.states.thirst - 40);
+                    itemUsed = "물";
+                }
+                log(`<div class="log-entry rest" style="border-left-color: #3498db; background: rgba(52, 152, 219, 0.1);">
+                    <span class="log-char-name">🍱 나눔: ${donor.name} → ${target.name}</span>
+                    <div class="log-situation">기력이 다한 ${target.name}을(를) 위해 ${donor.name}이(가) 자신의 ${itemUsed}을(를) 나누어 주었습니다.</div>
+                </div>`);
+                target.trust[donor.id] = Math.min(100, (target.trust[donor.id] || 50) + 10);
+                await sleep(500);
+                return;
+            }
+        }
+    }
+
+    // 원수 관계인 캐릭터들 간의 내부 갈등(절도/방해) 로직
+    async function checkInternalConflict(char) {
+        if (char.states.status !== 'alive') return;
+
+        // 자신이 원수로 생각하는 생존자들 찾기
+        const enemies = characters.filter(other => 
+            other.id !== char.id && 
+            other.states.status === 'alive' && 
+            (char.trust[other.id] || 50) < 20
+        );
+
+        if (enemies.length > 0 && Math.random() < 0.15) { // 15% 확률로 발생
+            const target = enemies[Math.floor(Math.random() * enemies.length)];
+            const actionRand = Math.random();
+
+            if (actionRand < 0.5) { // 아이템 절도
+                const stealableItems = Object.keys(target.inventory).filter(k => target.inventory[k] > 0 && k !== 'weapon');
+                if (stealableItems.length > 0) {
+                    const item = stealableItems[Math.floor(Math.random() * stealableItems.length)];
+                    target.inventory[item]--;
+                    char.inventory[item]++;
+                    log(`<div class="log-entry zombie" style="border-left-color: #f39c12; background: rgba(243, 156, 18, 0.1);">
+                        <span class="log-char-name">🕵️ 절도: ${char.name} → ${target.name}</span>
+                        <div class="log-situation">${char.name}이(가) 증오하는 ${target.name}의 가방에서 몰래 ${item}을(를) 훔쳤습니다!</div>
+                    </div>`);
+                }
+            } else { // 장비 훼손 및 방해
+                target.states.hp -= 8;
+                target.states.fear = Math.min(100, target.states.fear + 15);
+                log(`<div class="log-entry zombie" style="border-left-color: #e74c3c; background: rgba(231, 76, 60, 0.1);">
+                    <span class="log-char-name">👿 방해: ${char.name} → ${target.name}</span>
+                    <div class="log-situation">${char.name}이(가) ${target.name}의 장비를 몰래 망가뜨리고 위협적인 낙서를 남겨 고립시켰습니다.</div>
+                    <div class="log-result" style="color: var(--accent-color);">${target.name}은(는) 신체적, 정신적 타격을 입었습니다.</div>
+                </div>`);
+            }
+            await sleep(600);
+        }
+    }
+
     function calculateMbtiCompatibilityScore(mbti1, mbti2) {
         let score = 0; // Max 40 (all match), Min -20 (all opposite)
+        // 제공된 이미지(MBTI 상성표)의 데이터 매핑
+        const idealMatches = {
+            'INFP': ['ENFJ', 'ENTJ'], 'ENFP': ['INFJ', 'INTJ'], 'INFJ': ['ENFP', 'ENTP'], 'ENFJ': ['INFP', 'ISFP'],
+            'INTJ': ['ENFP', 'ENTP'], 'ENTJ': ['INFP', 'INTP'], 'INTP': ['ENTJ', 'ESTJ'], 'ENTP': ['INFJ', 'INTJ'],
+            'ISFP': ['ENFJ', 'ESFJ', 'ESTJ'], 'ESFP': ['ISFJ', 'ISTJ'], 'ISTP': ['ESFJ', 'ESTJ'], 'ESTP': ['ISFJ', 'ISTJ'],
+            'ISFJ': ['ESFP', 'ESTP'], 'ESFJ': ['ISFP', 'ISTP'], 'ISTJ': ['ESFP', 'ESTP'], 'ESTJ': ['INTP', 'ISFP', 'ISTP']
+        };
+
+        // 1. 최상의 궁합 (천생연분) - 이미지의 하트/진한 초록색
+        if (idealMatches[mbti1] && idealMatches[mbti1].includes(mbti2)) return 40;
+
+        // 2. 최악의 궁합 (상극) - 이미지의 빨간색 (NF군 vs S군 대부분)
+        const nfGroup = ['INFP', 'ENFP', 'INFJ', 'ENFJ'];
+        const sGroup = ['ISFP', 'ESFP', 'ISTP', 'ESTP', 'ISFJ', 'ESFJ', 'ISTJ', 'ESTJ'];
+        
+        const isNF1 = nfGroup.includes(mbti1);
+        const isNF2 = nfGroup.includes(mbti2);
+        const isS1 = sGroup.includes(mbti1);
+        const isS2 = sGroup.includes(mbti2);
+
+        if ((isNF1 && isS2) || (isS1 && isNF2)) return -20;
+
+        // 3. 그 외의 궁합 (보통 ~ 좋음) - 이미지의 노란색/연두색
+        let baseScore = 0;
         for (let i = 0; i < 4; i++) {
             const char1Type = mbti1[i];
             const char2Type = mbti2[i];
@@ -912,19 +1123,16 @@
             } else {
                 score -= 5; // Opposite trait (slight friction)
             }
+            if (mbti1[i] === mbti2[i]) baseScore += 5;
         }
-        // Scale score to a modifier for trust (e.g., -20 to +20)
-        // (score + 20) / 60 * 40 - 20 => maps -20..40 to -20..20
-        // Simpler: just use score directly as a modifier, capped.
-        return Math.max(-20, Math.min(20, score));
+        return baseScore; // 0 ~ 20점 사이 결정
     }
 
-
     function getPsychEmoji(char) {
-        if (char.states.fear > 80) return "😱"; // 패닉
-        if (char.states.fear > 40) return "😰"; //불안
+        if (char.states.fear > 80) return "😱"; // 패닉/극심한 두려움
+        if (char.states.fear > 50) return "😰"; // 불안
         if (char.states.hunger > 70 || char.states.thirst > 70) return "👿"; // 예민/분노
-        if (char.states.fatigue > 60) return "😫"; // 지침
+        if (char.states.fatigue > 70) return "😫"; // 지침
         return "😌"; // 평온
     }
 
@@ -974,32 +1182,78 @@
             formula += ` + MBTI(${mbtiEventMod})`;
         }
 
+        // 난이도 보정 (확실한 난이도 차등)
+        // 매우 쉬움(-20)부터 매우 어려움(40)까지 대응
+        const diffPenalty = difficultyMod < 0 ? difficultyMod * 2 : difficultyMod;
+        val -= diffPenalty;
+        if (diffPenalty !== 0) formula += ` ${diffPenalty < 0 ? '+' : '-'}${Math.abs(diffPenalty)}(난이도)`;
+
+        // 탈출 골든타임 (선발대 탈출 성공 시 보너스 강화)
+        if (escapeRouteDiscovered && type === 'escape') {
+            val += 50;
+            formula += ` + 탈출 골든타임(+50)`;
+        }
+
+        // 피로도 페널티 (모든 행동에 실패 확률 증가)
+        if (char.states.fatigue > 50) {
+            const fatiguePenalty = (char.states.fatigue - 50) * 0.6; 
+            val -= fatiguePenalty;
+            formula += ` - 피로(${fatiguePenalty.toFixed(1)})`;
+        }
+
+        // 두려움 페널티
+        if (char.states.fear >= 80) {
+            val -= 30;
+            formula += " - 패닉(-30)";
+        } else if (char.states.fear >= 50) {
+            val -= 15;
+            formula += " - 두려움(-15)";
+        }
+
+        // 무기 효과 적용
+        const weapon = WEAPON_TYPES[char.inventory.weapon] || WEAPON_TYPES['none'];
 
         switch(type) {
             case 'detect':
                 base = 30;
-                val = base + (char.stats['청력'] * 4) + (char.stats['시력'] * 3) + env.stealthMod;
-                formula = `30 + (청력:${char.stats['청력']}×4) + (시력:${char.stats['시력']}×3) + 환경:${env.stealthMod}`;
+                const listenMod = char.stats['청력'] * 4;
+                const sightMod = char.stats['시력'] * 3;
+                val += base + listenMod + sightMod + env.stealthMod + weapon.detect;
+                formula = `${base} + 청력(${listenMod}) + 시력(${sightMod}) + 환경(${env.stealthMod}) + 무기(${weapon.detect})`;
                 break;
             case 'escape':
                 base = 25;
-                val = base + (char.stats['속도'] * 5) + (char.stats['순발력'] * 4) - (char.states.fatigue * 0.2) + env.escapeMod;
-                formula = `25 + (속도:${char.stats['속도']}×5) + (순발력:${char.stats['순발력']}×4) - (피로:${char.states.fatigue.toFixed(1)}×0.2) + 환경:${env.escapeMod}`;
+                const speedMod = char.stats['속도'] * 5;
+                const reflexMod = char.stats['순발력'] * 4;
+                val += base + speedMod + reflexMod + env.escapeMod + weapon.escape;
+                formula = `${base} + 속도(${speedMod}) + 순발력(${reflexMod}) + 환경(${env.escapeMod}) + 무기(${weapon.escape})`;
                 break;
             case 'combat':
                 base = 20;
-                val = base + (char.stats['근력'] * 6) + (char.stats['체력'] * 3);
-                formula = `20 + (근력:${char.stats['근력']}×6) + (체력:${char.stats['체력']}×3)`;
+                val += base + (char.stats['근력'] * 6) + (char.stats['체력'] * 3) + weapon.combat;
+                formula = `20 + (근력:${char.stats['근력']}×6) + (체력:${char.stats['체력']}×3) + 무기(${weapon.combat})`;
                 break;
             case 'infection':
                 base = 50;
-                val = base - (char.stats['면역력'] * 5);
+                val += base - (char.stats['면역력'] * 5);
                 formula = `50 - (면역:${char.stats['면역력']}×5)`;
                 break;
             case 'conflict':
                 base = 30;
-                val = base + (char.stats['사교성'] * 5) + (char.stats['판단력'] * 3);
+                val += base + (char.stats['사교성'] * 5) + (char.stats['판단력'] * 3);
                 formula = `30 + (사교:${char.stats['사교성']}×5) + (판단:${char.stats['판단력']}×3)`;
+                break;
+            case 'search':
+                base = 35;
+                const intelMod = char.stats['지능'] * 4;
+                val += base + intelMod;
+                formula = `${base} + 지능(${intelMod})`;
+                break;
+            case 'hazard':
+                base = 35;
+                const reflexModHazard = char.stats['순발력'] * 5;
+                val += base + reflexModHazard;
+                formula = `35 + 순발력(${reflexModHazard})`;
                 break;
         }
         
@@ -1021,12 +1275,6 @@
             formula += ` + 동료 신뢰(+${friendBonus})`;
         }
 
-        // 공포도 페널티 (공포 80 이상 시 성공률 20% 감소)
-        if (char.states.fear >= 80) {
-            val -= 20;
-            formula += " - 패닉(-20)";
-        }
-
         return { successChance: Math.max(0, Math.min(100, val)), formula };
     }
 
@@ -1046,7 +1294,7 @@
 
             c1.states.hunger = initialNeed;
             c1.states.thirst = initialNeed;
-            c1.states.hp = 100;
+            c1.states.hp = difficultyMod >= 40 ? 80 : 100; // 지옥 난이도는 낮은 체력으로 시작
             c1.states.fatigue = initialNeed / 2;
 
             characters.forEach(c2 => {
@@ -1068,14 +1316,20 @@
     function updateStatusBoard() {
         const board = document.getElementById('statusBoard');
         board.innerHTML = '';
+        
+        if (escapeRouteDiscovered) {
+            board.innerHTML = `<div style="background: linear-gradient(45deg, #f1c40f, #e67e22); color: #000; padding: 10px; border-radius: 8px; font-weight: bold; text-align: center; margin-bottom: 15px; animation: urgent-glow 1s infinite; border: 1px solid rgba(0,0,0,0.2);">🚀 탈출 골든타임 활성화!</div>`;
+        }
+
         characters.forEach(c => {
             const card = document.createElement('div');
             card.className = `char-card ${c.states.status === 'dead' || c.states.status === 'zombie' ? 'dead' : ''} ${c.states.status === 'escaped' ? 'escaped' : ''}`;
             
             const hpColor = c.states.hp > 50 ? 'var(--success-color)' : (c.states.hp > 20 ? '#f1c40f' : 'var(--accent-color)');
             const infColor = c.states.infection > 50 ? 'var(--accent-color)' : '#9b59b6';
+            const weapon = WEAPON_TYPES[c.inventory.weapon] || WEAPON_TYPES['none'];
 
-            const effectsHtml = c.effects.length > 0 ? 
+            const effectsHtml = c.effects.length > 0 ?
                 `<div style="margin-top:5px; color:#e67e22; font-size:0.75em;">🔸 ${c.effects.map(e => `${e.name}(${e.duration}d)`).join(', ')}</div>` : '';
 
             card.innerHTML = `
@@ -1087,13 +1341,21 @@
                 <div style="font-size:0.85em;">
                     HP
                     <div class="stat-bar-container"><div class="stat-bar" style="width:${c.states.hp}%; background:${hpColor};"></div></div>
-                    INFECTION
+                </div>
+                <div style="margin-top:5px; font-size:0.75em; color:#3498db; background:rgba(0,0,0,0.3); padding:4px; border-radius:4px;">
+                    🎒 🩹x${c.inventory.medkit} 🍞x${c.inventory.food} 💧x${c.inventory.water} 💊x${c.inventory.sedative} ⚡x${c.inventory.energyDrink} x${c.inventory.chocolate}
+                </div>
+                <div style="margin-top:5px; font-size:0.8em; color:#f1c40f; padding: 2px 0;">
+                    ⚔️ 장비: <strong>${weapon.icon} ${weapon.name}</strong>
+                </div>
+                <div style="font-size:0.85em; margin-top:5px;">
+                    감염도
                     <div class="stat-bar-container"><div class="stat-bar" style="width:${c.states.infection}%; background:${infColor};"></div></div>
                 </div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-top:8px; font-size:0.8em; color:#bbb;">
                     <div>🍖 배고픔: ${Math.ceil(c.states.hunger)}</div>
                     <div>😫 피로도: ${Math.ceil(c.states.fatigue)}</div>
-                    <div>😨 공포도: ${Math.ceil(c.states.fear)}</div>
+                    <div>😨 두려움: ${Math.ceil(c.states.fear)}</div>
                     <div>💧 갈증: ${Math.ceil(c.states.thirst)}</div>
                 </div>
             `;
@@ -1117,6 +1379,7 @@
                 // 두 캐릭터 간 신뢰도의 평균값 계산
                 const trustVal = Math.round(((charA.trust[charB.id] || 50) + (charB.trust[charA.id] || 50)) / 2);
                 const mbtiScore = calculateMbtiCompatibilityScore(charA.mbti, charB.mbti);
+                const mbtiGrade = mbtiScore >= 40 ? "上" : (mbtiScore < 0 ? "下" : "中");
 
                 let statusText = "😐 보통";
                 let color = "#aaa";
@@ -1135,7 +1398,7 @@
                         <span style="font-weight:bold; color:${color};">${trustVal}</span>
                     </div>
                     <div style="display:flex; justify-content:space-between; font-size:0.75em; margin-top:5px;">
-                        <span style="color:#777;">궁합 지수: ${mbtiScore}</span>
+                        <span style="color:#777;">궁합: ${mbtiGrade}</span>
                         <span style="color:${color}; opacity:0.8;">${statusText}</span>
                     </div>
                 `;
@@ -1166,9 +1429,29 @@
         }
     }
 
+    async function triggerZombieAllyAttack(zombieChar) {
+        const victims = characters.filter(c => c.states.status === 'alive');
+        if (victims.length === 0) return;
+        
+        if (Math.random() < 0.3) { // 30% 확률로 좀비가 된 동료가 습격
+            const victim = victims[Math.floor(Math.random() * victims.length)];
+            log(`<div class="log-entry zombie" style="background: rgba(231, 76, 60, 0.2);">
+                <span class="log-char-name">⚠️ 습격: ${zombieChar.name}</span>
+                <div class="log-situation">좀비가 된 ${zombieChar.name}이(가) 이성을 잃고 ${victim.name}에게 달려들었습니다!</div>
+                <div class="log-result" style="color: var(--accent-color);">${victim.name}은(는) 전 동료의 공격에 깊은 상처를 입고 감염되었습니다.</div>
+            </div>`);
+            victim.states.hp -= 25;
+            victim.states.infection += 30;
+            await sleep(600);
+        }
+    }
+
+    let autoNextDayTimer = null;
     async function processDay() {
         if (!gameActive || SoundManager.isProcessing) return;
         SoundManager.isProcessing = true;
+        if (autoNextDayTimer) clearTimeout(autoNextDayTimer);
+
         const nextBtn = document.getElementById('nextDayBtn');
         nextBtn.disabled = true;
 
@@ -1183,10 +1466,25 @@
         await sleep(500);
 
         for (let char of characters) {
+            // 0-1. 좀비가 된 동료의 행동
+            if (char.states.status === 'zombie') {
+                await triggerZombieAllyAttack(char);
+                continue;
+            }
+
             if (char.states.status !== 'alive') continue;
 
             // 현재 처리 중인 캐릭터의 공포도를 사운드 매니저에 동기화
             SoundManager.currentFear = char.states.fear;
+
+            // 0. 아이템 자동 사용
+            autoUseItems(char);
+
+            // 0-1. 동료의 원조 확인
+            await checkHelpingOthers(char);
+
+            // 0-2. 내부 갈등(원수) 확인
+            await checkInternalConflict(char);
 
             // 1. 상태 악화
             // 장기 효과 턴 감소 및 처리
@@ -1200,14 +1498,21 @@
             const randomHPLoss = Math.floor(Math.random() * 3); // 0~2 랜덤 체력 감소 (완화)
             char.states.hp -= randomHPLoss;
 
-            char.states.hunger += (10 - char.stats['인내력'] * 0.5); // 허기 증가폭 감소
+            const fatigueMod = char.mbti.includes('J') ? 0.8 : 1.0;
+            char.states.hunger += (10 - char.stats['인내력'] * 0.5);
             char.states.thirst += 10; // 갈증 증가폭 감소
-            char.states.fatigue += (10 - char.stats['체력'] * 0.5);
-            if (char.states.infection > 0) char.states.infection += 5;
+            char.states.fatigue += (10 - char.stats['체력'] * 0.5) * fatigueMod;
 
-            // 임계값 체크 및 패널티 대폭 완화
-            if (char.states.hunger > 95) char.states.hp -= 2;
-            if (char.states.thirst > 95) char.states.hp -= 3;
+            // 임계값 체크 및 패널티 적용 (배고픔/갈증/피로)
+            if (char.states.hunger > 80) char.states.hp -= 4;
+            if (char.states.thirst > 80) char.states.hp -= 6;
+            if (char.states.fatigue > 90) char.states.hp -= 2;
+
+            // 모든 상태 수치 0~100으로 재구성 (Clamping)
+            char.states.hunger = Math.max(0, Math.min(100, char.states.hunger));
+            char.states.thirst = Math.max(0, Math.min(100, char.states.thirst));
+            char.states.fatigue = Math.max(0, Math.min(100, char.states.fatigue));
+            char.states.fear = Math.max(0, Math.min(100, char.states.fear));
 
             // 2. 이벤트 발생
             updateStatusBoard();
@@ -1243,6 +1548,11 @@
         
         SoundManager.isProcessing = false;
         nextBtn.disabled = false;
+
+        // 자동 다음 날 진행 (5초 뒤)
+        if (gameActive) {
+            autoNextDayTimer = setTimeout(processDay, 5000);
+        }
     }
 
     async function generateEvent(char) {
@@ -1254,10 +1564,12 @@
         const zombieProb = 20 + selectedLoc.zombieMod + difficultyMod;
         if (rand < zombieProb) type = 'zombie';
         else if (rand < zombieProb + 30) type = 'search';
-        else if (rand < zombieProb + 40) type = 'conflict';
-        else if (rand < zombieProb + 55) type = 'move';
+        else if (rand < zombieProb + 35) type = 'viral_hazard'; // 감염 전용 이벤트 추가
+        else if (rand < zombieProb + 45) type = 'conflict';
+        else if (rand < zombieProb + 60) type = 'move'; // 탈출 시도 확률 증가
         else if (rand < zombieProb + 70) type = 'coop';
-        else if (rand < zombieProb + 85) type = 'hazard';
+        else if (rand < zombieProb + 80) type = 'hazard';
+        else if (rand < zombieProb + 90) type = 'weapon_find';
         else type = 'rest';
 
         const room = selectedLoc.rooms[Math.floor(Math.random() * selectedLoc.rooms.length)];
@@ -1268,6 +1580,16 @@
         switch(type) {
             case 'zombie':
                 SoundManager.playAlert();
+                // 두려움 수치가 너무 높으면 패닉 발생
+                if (char.states.fear > 85 && Math.random() < 0.7) {
+                    entry.innerHTML += `<div class="log-situation" style="color: var(--accent-color);">😱 ${char.name}은(는) 공포에 질려 비명을 지르며 제자리에 주저앉았다!</div>`;
+                    await sleep(500);
+                    char.states.hp -= 40;
+                    char.states.fear = 100;
+                    entry.innerHTML += `<div class="log-result" style="color: var(--accent-color);">🩸 무방비 상태로 좀비에게 습격당해 큰 부상을 입었다.</div>`;
+                    break; 
+                }
+
                 const det = calculateProbability('detect', char, selectedLoc);
                 entry.innerHTML += `<div class="log-situation">🧟 ${room}에서 좀비 무리와 마주쳤다! 은신 및 도주를 시도했다.</div>`;
                 entry.innerHTML += `<div class="log-dialogue">${getDialogue('combat', char)}</div>`;
@@ -1299,28 +1621,58 @@
                         }
                         const inf = calculateProbability('infection', char, selectedLoc);
                         if (Math.random() * 100 < inf.successChance) {
-                            char.states.infection += 20;
-                            entry.innerHTML += `<div class="log-result" style="color: #9b59b6;">☣️ 상처를 통해 바이러스가 침투했다!</div>`;
+                            char.states.infection += 40; // 감염 수치 증가
+                            entry.innerHTML += `<div class="log-result" style="color: #9b59b6;">☣️ 깊은 상처를 통해 바이러스가 침투하기 시작했다!</div>`;
                         }
                     }
                 }
                 break;
 
+            case 'viral_hazard':
+                entry.innerHTML += `<div class="log-situation">☣️ ${room} 바닥에 좀비의 오물이 가득합니다. 공기 중에 바이러스 농도가 높습니다!</div>`;
+                await sleep(500);
+                const resist = calculateProbability('infection', char, selectedLoc);
+                if (Math.random() * 100 < resist.successChance + 10) {
+                    char.states.infection += 25;
+                    SoundManager.playAlert();
+                    entry.innerHTML += `<div class="log-result" style="color: #2ecc71;">🤢 썩은 공기를 들이마신 ${char.name}의 안색이 급격히 창백해집니다.</div>`;
+                } else {
+                    entry.innerHTML += `<div class="log-result">😷 코를 틀어막고 빠르게 현장을 벗어났습니다.</div>`;
+                }
+                break;
+
             case 'search':
-                entry.innerHTML += `<div class="log-situation">🔍 ${room}의 쓰레기 더미를 뒤지며 보급품을 찾았다.</div>`;
+                entry.innerHTML += `<div class="log-situation">🔍 ${room}에서 쓸만한 물건을 찾기 위해 주변을 샅샅이 뒤졌다.</div>`;
                 entry.innerHTML += `<div class="log-dialogue">${getDialogue('search', char)}</div>`;
                 await sleep(400);
-                const searchSkill = (char.stats['지능'] + char.stats['시력']) * 5;
-                if (Math.random() * 100 < searchSkill + selectedLoc.foodMod) {
+                const searchChance = calculateProbability('search', char, selectedLoc).successChance;
+                if (Math.random() * 100 < searchChance) {
                     SoundManager.playSuccess();
-                    if (Math.random() * 100 < 15) { // 15% 확률로 구급상자 발견
-                        entry.innerHTML += `<div class="log-result" style="color: #f1c40f;">🩹 구급 상자를 발견했다! 모든 부상을 치료하고 체력을 회복했다.</div>`;
-                        char.states.hp = Math.min(100, char.states.hp + 40);
-                        char.effects = char.effects.filter(e => e.name !== "골절 부상");
+
+                    const findRand = Math.random();
+                    if (findRand < 0.15) {
+                        char.inventory.medkit++;
+                        entry.innerHTML += `<div class="log-result" style="color: #f1c40f;">🩹 구급 상자를 확보했다!</div>`;
+                    } else if (findRand < 0.35) {
+                        char.inventory.food++;
+                        entry.innerHTML += `<div class="log-result" style="color: var(--info-color);">🍞 통조림을 하나 발견했다.</div>`;
+                    } else if (findRand < 0.55) {
+                        char.inventory.water++;
+                        entry.innerHTML += `<div class="log-result" style="color: var(--info-color);">💧 깨끗한 물 한 병을 얻었다.</div>`;
+                    } else if (findRand < 0.70) {
+                        char.inventory.sedative++;
+                        entry.innerHTML += `<div class="log-result" style="color: #a29bfe;">💊 정신 안정제를 찾았다!</div>`;
+                    } else if (findRand < 0.85) {
+                        char.inventory.energyDrink++;
+                        entry.innerHTML += `<div class="log-result" style="color: #f1c40f;">⚡ 에너지 드링크를 발견했다!</div>`;
+                    } else if (findRand < 0.90) {
+                        char.inventory.chocolate++;
+                        entry.innerHTML += `<div class="log-result" style="color: #e17055;">🍫 초콜릿 바 하나를 주웠다.</div>`;
                     } else {
-                        entry.innerHTML += `<div class="log-result" style="color: var(--info-color);">🍎 깨끗한 물과 통조림을 발견했다!</div>`;
-                        char.states.hunger = Math.max(0, char.states.hunger - 40);
-                        char.states.thirst = Math.max(0, char.states.thirst - 50);
+                        const weaponKeys = Object.keys(WEAPON_TYPES).filter(k => k !== 'none');
+                        const newWeapon = weaponKeys[Math.floor(Math.random() * weaponKeys.length)];
+                        char.inventory.weapon = newWeapon;
+                        entry.innerHTML += `<div class="log-result" style="color: var(--success-color);">⚔️ 새로운 무기 [${WEAPON_TYPES[newWeapon].name}]을(를) 획득했다!</div>`;
                     }
                 } else {
                     if (Math.random() * 100 < 20) { // 20% 확률로 식중독
@@ -1331,6 +1683,17 @@
                     }
                     char.states.fatigue += 5;
                 }
+                break;
+
+            case 'weapon_find':
+                const availableWeapons = ['bat', 'pipe', 'axe', 'slingshot'];
+                const foundWeapon = availableWeapons[Math.floor(Math.random() * availableWeapons.length)];
+                entry.innerHTML += `<div class="log-situation">⚔️ ${room} 구석에서 쓸만한 무기 [${WEAPON_TYPES[foundWeapon].name}]을(를) 발견했다!</div>`;
+                await sleep(400);
+                
+                SoundManager.playSuccess();
+                char.inventory.weapon = foundWeapon;
+                entry.innerHTML += `<div class="log-result" style="color: var(--success-color);">기존 장비를 버리고 [${WEAPON_TYPES[foundWeapon].name}]을(를) 장착했다.</div>`;
                 break;
 
             case 'conflict':
@@ -1364,26 +1727,35 @@
                 break;
 
             case 'move':
-                entry.innerHTML += `<div class="log-situation">🏃 거점을 옮기기 위해 ${room} 지역을 통과했다.</div>`;
+                if (escapeRouteDiscovered) {
+                    entry.innerHTML += `<div class="log-situation" style="color: #f1c40f;">✨ 선발대가 확보한 경로를 따라 신속하게 이동합니다! (골든타임)</div>`;
+                }
+                entry.innerHTML += `<div class="log-situation">🚁 ${char.name}이(가) 봉쇄 구역을 벗어나기 위해 탈출로를 수색합니다.</div>`;
                 await sleep(500);
                 const esc = calculateProbability('escape', char, selectedLoc);
-                if (Math.random() * 100 < (esc.successChance * 0.2)) {
+                const escapeThreshold = difficultyMod <= -40 ? 0.4 : (difficultyMod <= -20 ? 0.25 : 0.15); 
+                if (Math.random() * 100 < (esc.successChance * escapeThreshold)) {
                     SoundManager.playSuccess();
-                    entry.innerHTML += `<div class="log-result" style="color: #f1c40f; font-size: 1.2em;">🚁 탈출 경로를 확보했다! 봉쇄 구역을 벗어났다!</div>`;
+                    entry.innerHTML += `<div class="log-result" style="color: #f1c40f; font-size: 1.2em;">🎊 ${char.name}이(가) 탈출에 성공했습니다!</div>`;
+                    if (!escapeRouteDiscovered) {
+                        escapeRouteDiscovered = true;
+                        log(`<div class="log-entry system" style="background: linear-gradient(to right, #f1c40f, #e67e22); color: #000; border: none; font-size: 1.1em; padding: 20px; text-shadow: none;">🚀 탈출 골든타임 시작!</div>`);
+                    }
                     char.states.status = 'escaped';
                 } else {
-                    entry.innerHTML += `<div class="log-result">💨 다행히 적의 시선을 피해 자리를 옮겼다.</div>`;
-                    char.states.fatigue += 10;
+                    entry.innerHTML += `<div class="log-result">🏃 탈출로를 찾지 못하고 안전한 장소로 이동했습니다.</div>`;
+                    char.states.fatigue += 15;
                 }
                 break;
 
             case 'coop':
                 const friend = characters.filter(c => c.id !== char.id && c.states.status === 'alive')[0];
+                const fearRedMod = char.mbti.includes('F') ? 1.5 : 1.0;
                 if (friend) {
                     entry.innerHTML += `<div class="log-situation">🤝 ${friend.name}와(과) 함께 대화를 나누며 잠시 휴식을 취했다.</div>`;
                     entry.innerHTML += `<div class="log-dialogue">${getDialogue('bonding', char)}</div>`;
                     await sleep(400);
-                    char.states.fear = Math.max(0, char.states.fear - 20);
+                    char.states.fear = Math.max(0, Math.min(100, char.states.fear - (20 * fearRedMod)));
                     char.trust[friend.id] += 15;
                     friend.trust[char.id] += 15;
                     entry.innerHTML += `<div class="log-result" style="color:var(--success-color);">둘 사이의 유대감이 깊어지고 공포가 사라졌다.</div>`;
@@ -1396,7 +1768,7 @@
             case 'hazard':
                 entry.innerHTML += `<div class="log-situation">☢️ 아차! ${room}의 바닥이 무너지며 추락할 위기에 처했다.</div>`;
                 await sleep(500);
-                const reflex = calculateProbability('escape', char, selectedLoc);
+                const reflex = calculateProbability('hazard', char, selectedLoc);
                 if (Math.random() * 100 < reflex.successChance) {
                     SoundManager.playSuccess();
                     entry.innerHTML += `<div class="log-result" style="color:var(--success-color);">🤸 반사적으로 근처 구조물을 붙잡아 살아남았다.</div>`;
@@ -1436,7 +1808,6 @@
         gameActive = false;
         document.getElementById('nextDayBtn').classList.add('hidden');
         
-        const survivors = characters.filter(c => c.states.status === 'alive').length;
         const dead = characters.filter(c => c.states.status === 'dead').length;
         const escaped = characters.filter(c => c.states.status === 'escaped').length;
         const zombie = characters.filter(c => c.states.status === 'zombie').length;
@@ -1444,7 +1815,6 @@
         let summary = `<div class="log-entry system" style="text-align: left; background: #222; border: 2px solid #f1c40f;">
             <div style="font-size: 1.5em; margin-bottom: 10px;">📊 최종 생존 기록</div>
             <div style="color: var(--success-color);">🚁 탈출 성공: ${escaped}명</div>
-            <div style="color: #3498db;">🚶 이동 중: ${survivors}명</div>
             <div style="color: var(--accent-color);">💀 사망: ${dead}명</div>
             <div style="color: #2ecc71;">🧟 좀비화: ${zombie}명</div>
             <div style="margin-top: 10px; font-size: 0.9em; color: #888;">시뮬레이션 종료. 기록 보존됨.</div>
