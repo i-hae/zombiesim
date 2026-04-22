@@ -427,38 +427,36 @@
             #statsInputs { grid-template-columns: 1fr 1fr; }
 
             .sim-panel {
-                display: block;
-                height: calc(100vh - 40px);
+                display: flex !important;
+                flex-direction: row !important;
+                overflow-x: auto !important;
+                scroll-snap-type: x mandatory;
+                gap: 0 !important;
+                height: calc(100vh - 60px);
+                -webkit-overflow-scrolling: touch;
             }
 
             .mobile-tab-bar { display: grid; }
 
-            /* 모바일 보드 가로 배치 설정 */
             .status-board, .log-window, .relationship-board {
-                display: none; /* 탭 활성화 전까지 숨김 */
+                display: flex !important;
+                min-width: 90vw;
+                max-width: 90vw;
                 height: calc(100vh - 220px);
-                width: 100%;
-                margin-bottom: 80px;
-                flex-direction: row !important; /* 가로 방향 배치 */
-                overflow-x: auto !important; /* 가로 스크롤 허용 */
-                overflow-y: hidden !important;
-                scroll-snap-type: x mandatory; /* 카드 단위 스냅 */
-                padding: 10px !important;
-                gap: 15px !important;
-                align-items: stretch;
-            }
-            .status-board.active, .log-window.active, .relationship-board.active {
-                display: flex;
+                scroll-snap-align: center;
+                margin: 0 5vw;
+                padding: 15px;
+                box-sizing: border-box;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+                flex-direction: column !important;
             }
 
-            /* 내부 아이템 카드화 */
             .log-entry, .status-board .char-card, .relationship-board .char-card {
-                min-width: 280px;
-                max-width: 85%;
+                min-width: unset;
+                max-width: 100%;
                 flex-shrink: 0;
-                scroll-snap-align: center;
                 height: auto;
-                overflow-y: auto; /* 긴 텍스트는 내부 세로 스크롤 */
                 border-bottom: none;
                 border-left: 4px solid var(--accent-color);
             }
@@ -511,6 +509,39 @@
             background: #252525; padding: 8px 12px; border-radius: 6px;
             display: flex; justify-content: space-between; font-size: 0.9em;
         }
+
+        /* 모달 아포칼립스 시각 효과 */
+        .modal-overlay-effect {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .modal-noise {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            opacity: 0.08;
+        }
+        .modal-warning-pulse {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, rgba(231, 76, 60, 0.2) 0%, rgba(139, 0, 0, 0) 70%);
+            animation: modal-pulse 2s infinite;
+        }
+        @keyframes modal-pulse {
+            0% { opacity: 0.3; }
+            50% { opacity: 0.7; }
+            100% { opacity: 0.3; }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .modal-content.urgent { animation: fadeIn 0.3s ease, shake 0.2s 3; border: 2px solid #ff0000; }
     </style>
 </head>
 <body>
@@ -647,7 +678,11 @@
 
         <!-- 상세 정보 모달 -->
         <div id="charModal" class="modal" onclick="closeModal()">
-            <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-content urgent" id="modalContent" onclick="event.stopPropagation()">
+                <div class="modal-overlay-effect">
+                    <div class="modal-noise"></div>
+                    <div class="modal-warning-pulse"></div>
+                </div>
                 <span class="close-modal" onclick="closeModal()">&times;</span>
                 <h3 id="modalCharName" style="margin-bottom: 5px;">이름</h3>
                 <div id="modalCharDetails" class="details-grid"></div>
@@ -787,19 +822,13 @@
         document.getElementById('charModal').style.display = 'none';
     }
 
-    // --- 모바일 UI 핸들러 ---
     function switchTab(targetId, el) {
-        const tabs = ['logWindow', 'statusBoard', 'relationshipBoard'];
-        tabs.forEach(id => {
-            document.getElementById(id).classList.remove('active');
-        });
-        document.getElementById(targetId).classList.add('active');
-
-        // 탭 버튼 스타일
+        const target = document.getElementById(targetId);
+        target.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        
         document.querySelectorAll('.tab-item').forEach(item => item.classList.remove('active'));
         el.classList.add('active');
     }
-
     // --- 사운드 매니저 (Web Audio API) ---
     const SoundManager = {
         audioCtx: null,
