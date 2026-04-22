@@ -309,6 +309,7 @@
             background: rgba(20, 20, 20, 0.9);
             border-radius: 8px;
             border: 1px solid #444;
+            overflow-y: auto; /* 스크롤 기능 복구 */
         }
 
         .log-window {
@@ -317,9 +318,9 @@
             font-family: 'Pretendard', sans-serif;
             color: #bbb;
             position: relative;
-            gap: 15px;
             grid-column: 2;
             grid-row: 1;
+            display: block; /* PC 스크롤 최적화를 위해 block으로 변경 */
         }
 
         .log-entry {
@@ -328,6 +329,7 @@
             padding: 15px;
             border-radius: 4px;
             animation: fadeIn 0.3s ease-out;
+            margin-bottom: 15px; /* gap 대신 margin으로 간격 조정 */
         }
 
         .log-entry.zombie { border-left-color: var(--accent-color); background: rgba(231, 76, 60, 0.05); }
@@ -1123,7 +1125,10 @@
         }
         const el = temp.firstElementChild;
         win.appendChild(el);
+        // 스크롤을 즉시 최하단으로 이동 (behavior: smooth는 가끔 끊길 수 있어 설정 변경)
         win.scrollTop = win.scrollHeight;
+        // 혹은 부드러운 스크롤을 원할 경우:
+        // requestAnimationFrame(() => { win.scrollTo({ top: win.scrollHeight, behavior: 'smooth' }); });
         return el;
     }
 
@@ -1669,8 +1674,9 @@
     async function processDay() {
         if (!gameActive || SoundManager.isProcessing) return;
         SoundManager.isProcessing = true;
-        if (autoNextDayTimer) clearTimeout(autoNextDayTimer);
 
+        // 기존 타이머 확실히 제거
+        if (autoNextDayTimer) { clearTimeout(autoNextDayTimer); autoNextDayTimer = null; }
         const nextBtn = document.getElementById('nextDayBtn');
         nextBtn.disabled = true;
 
@@ -2019,12 +2025,13 @@
 
         if (dead + zombie + escaped === total) {
             finishGame();
+            SoundManager.stopHeartbeat(); // 게임이 완전히 끝났을 때만 정지
         }
-        SoundManager.stopHeartbeat(); // 게임 종료 시 심장 박동 정지
     }
 
     function finishGame() {
         gameActive = false;
+        if (autoNextDayTimer) { clearTimeout(autoNextDayTimer); autoNextDayTimer = null; }
         document.getElementById('nextDayBtn').classList.add('hidden');
         
         const dead = characters.filter(c => c.states.status === 'dead').length;
