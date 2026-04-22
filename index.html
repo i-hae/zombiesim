@@ -274,9 +274,7 @@
         .status-board {
             grid-column: 1;
             grid-row: 1 / 3;
-            background: rgba(20, 20, 20, 0.9);
             padding: 15px;
-            border-radius: 8px;
             border: 1px solid #444;
             overflow-y: auto;
             display: flex;
@@ -287,14 +285,8 @@
         .relationship-board {
             grid-column: 3;
             grid-row: 1 / 3;
-            background: rgba(20, 20, 20, 0.9);
             padding: 15px;
-            border-radius: 8px;
             border: 1px solid #444;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
         }
 
         .char-card {
@@ -312,20 +304,22 @@
         .stat-bar-container { width: 100%; background: #111; height: 6px; border-radius: 3px; margin: 4px 0 8px 0; overflow: hidden; }
         .stat-bar { height: 100%; transition: width 0.5s ease; }
 
+        /* 시뮬레이션 보드 공통 스타일 */
+        .status-board, .log-window, .relationship-board {
+            background: rgba(20, 20, 20, 0.9);
+            border-radius: 8px;
+            border: 1px solid #444;
+        }
+
         .log-window {
-            grid-column: 2;
-            grid-row: 1;
             background: #0a0a0a;
             padding: 25px;
-            border-radius: 8px;
-            overflow-y: scroll;
             font-family: 'Pretendard', sans-serif;
-            border: 1px solid #222;
             color: #bbb;
             position: relative;
-            display: flex;
-            flex-direction: column;
             gap: 15px;
+            grid-column: 2;
+            grid-row: 1;
         }
 
         .log-entry {
@@ -393,51 +387,73 @@
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #444; }
 
+        /* 모바일 전용 탭 바 */
+        .mobile-tab-bar {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #1a1a1a;
+            border-top: 1px solid #333;
+            z-index: 1000;
+            grid-template-columns: repeat(3, 1fr);
+        }
+        .tab-item {
+            padding: 15px 0;
+            text-align: center;
+            color: #888;
+            font-size: 0.8em;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+        }
+        .tab-item.active {
+            color: var(--info-color);
+            border-bottom: 3px solid var(--info-color);
+            background: rgba(52, 152, 219, 0.1);
+        }
+
         /* --- 모바일 반응형 스타일 --- */
         @media (max-width: 850px) {
             body { overflow-y: auto; height: auto; }
             .container { height: auto; padding: 10px; display: block; overflow-y: auto; }
-            
             h1 { font-size: 1.5em; }
-            
             .intro-panel { padding: 20px; width: 100%; box-sizing: border-box; }
             .selection-grid { flex-wrap: wrap; }
             .selection-card { min-width: 100px; padding: 10px; }
-
             .setup-panel { flex-direction: column; gap: 20px; height: auto; }
             .setup-left { flex: none; width: 100%; }
             .setup-right { flex: none; width: 100%; border-left: none; border-top: 1px solid #444; padding-left: 0; padding-top: 20px; }
-            #statsInputs { grid-template-columns: 1fr 1fr; } /* 모바일에서는 2열로 */
+            #statsInputs { grid-template-columns: 1fr 1fr; }
 
             .sim-panel {
-                display: flex;
-                flex-direction: column;
-                height: auto;
-                gap: 15px;
+                display: block;
+                height: calc(100vh - 40px);
             }
 
-            .log-window { 
-                order: 1; /* 로그를 가장 위로 */
-                height: 450px; 
-                padding: 15px;
+            .mobile-tab-bar { display: grid; }
+
+            .status-board, .log-window, .relationship-board {
+                display: none;
+                height: calc(100vh - 180px);
+                width: 100%;
+                margin-bottom: 80px;
             }
-            .status-board { 
-                order: 2; 
-                height: 400px; 
+            .status-board.active, .log-window.active, .relationship-board.active {
+                display: flex;
             }
-            .relationship-board { 
-                order: 3; 
-                height: 300px; 
+
+            .control-area {
+                position: fixed;
+                bottom: 60px; /* 탭 바 위로 */
+                left: 0;
+                width: 100%;
+                padding: 10px;
+                background: linear-gradient(to top, rgba(15,15,15,1), rgba(15,15,15,0));
+                justify-content: center;
+                z-index: 999;
             }
-            .control-area { 
-                order: 4; 
-                position: sticky; 
-                bottom: 0; 
-                background: var(--bg-color); 
-                padding: 10px 0; 
-                z-index: 100;
-            }
-            .btn-start { margin-bottom: 20px; }
+            .btn-start { width: 90% !important; margin-bottom: 10px; }
         }
     </style>
 </head>
@@ -563,8 +579,14 @@
 
     <!-- 우측 시뮬레이션 패널 -->
     <div class="sim-panel hidden" id="simPanel">
+        <div class="mobile-tab-bar" id="mobileTabBar">
+            <div class="tab-item active" onclick="switchTab('logWindow', this)">📜 로그</div>
+            <div class="tab-item" onclick="switchTab('statusBoard', this)">👥 상태</div>
+            <div class="tab-item" onclick="switchTab('relationshipBoard', this)">🤝 관계</div>
+        </div>
+
         <div class="status-board" id="statusBoard"></div>
-        <div class="log-window" id="logWindow"></div>
+        <div class="log-window active" id="logWindow"></div>
         <div class="relationship-board" id="relationshipBoard"></div>
         <div class="control-area">
             <button class="btn btn-start" id="nextDayBtn" style="width: 250px;" onclick="processDay()">다음 날 진행 (Next Day) →</button>
@@ -663,6 +685,50 @@
     }
 
     const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+    // --- 모바일 UI 핸들러 ---
+    function switchTab(targetId, el) {
+        const tabs = ['logWindow', 'statusBoard', 'relationshipBoard'];
+        tabs.forEach(id => {
+            document.getElementById(id).classList.remove('active');
+        });
+        document.getElementById(targetId).classList.add('active');
+
+        // 탭 버튼 스타일
+        document.querySelectorAll('.tab-item').forEach(item => item.classList.remove('active'));
+        el.classList.add('active');
+    }
+
+    // 스와이프 제스처 핸들러 (로그 창에서 작동)
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    function initSwipeListener() {
+        const logWin = document.getElementById('logWindow');
+        logWin.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        logWin.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, { passive: true });
+    }
+
+    function handleSwipe() {
+        // 가로 스와이프 거리가 충분하고, 왼쪽 방향(Next)일 때
+        const swipeThreshold = 100;
+        if (touchStartX - touchEndX > swipeThreshold) {
+            // 현재 시뮬레이션 중이고 버튼이 활성화 상태일 때만 실행
+            const nextBtn = document.getElementById('nextDayBtn');
+            if (gameActive && !nextBtn.disabled && !SoundManager.isProcessing) {
+                processDay();
+                // 모바일 피드백 (진동)
+                if (navigator.vibrate) navigator.vibrate(30);
+            }
+        }
+    }
+
 
     // --- 사운드 매니저 (Web Audio API) ---
     const SoundManager = {
@@ -1356,6 +1422,7 @@
         document.getElementById('simPanel').classList.remove('hidden');
         gameActive = true;
         
+        initSwipeListener(); // 스와이프 리스너 초기화
         log(`<div class="log-entry system">📍 시뮬레이션 시작: ${selectedLoc.name}</div>`);
         await processDay();
     }
