@@ -298,7 +298,7 @@
             box-shadow: 2px 2px 10px rgba(0,0,0,0.3);
         }
 
-        .char-card.dead { border-color: #333; opacity: 0.5; grayscale: 1; }
+        .char-card.dead { border-color: #333; opacity: 0.5; filter: grayscale(1); }
         .char-card.escaped { border-color: var(--success-color); box-shadow: 0 0 10px rgba(46, 213, 115, 0.2); }
 
         .stat-bar-container { width: 100%; background: #111; height: 6px; border-radius: 3px; margin: 4px 0 8px 0; overflow: hidden; }
@@ -549,6 +549,29 @@
             75% { transform: translateX(5px); }
         }
         .modal-content.urgent { animation: fadeIn 0.3s ease, shake 0.2s 3; border: 2px solid #ff0000; }
+
+        /* 자동 진행 토글 버튼 스타일 (시뮬레이션 화면) */
+        .control-area {
+            display: flex; /* Flexbox를 사용하여 요소들을 한 줄에 배치 */
+            align-items: center; /* 세로 중앙 정렬 */
+            gap: 15px; /* 요소들 사이의 간격 */
+        }
+        .auto-next-day-control {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end; /* 텍스트를 오른쪽으로 정렬 */
+            padding: 10px 15px;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid #444;
+            border-radius: 6px;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+        }
+        .auto-next-day-control label { margin-bottom: 0; font-size: 0.9em; color: #ccc; }
+        .auto-next-day-control div { /* 설명 텍스트 */
+            margin-top: 3px;
+            font-size: 0.7em;
+            opacity: 0.7;
+            color: #888; text-align: right; }
     </style>
 </head>
 <body>
@@ -576,6 +599,7 @@
                 </div>
             </div>
             <button class="btn btn-start" style="width: 320px;" onclick="proceedToDifficulty()">장소 확정 및 다음 단계 →</button>
+            <button class="btn" style="width: 320px; background: #5c0000; margin-top: 10px; color: white;" onclick="document.getElementById('loadSimulationFileInput').click()">📂 시뮬레이션 불러오기</button>
         </div>
 
         <!-- 난이도 선택 단계 -->
@@ -666,7 +690,33 @@
 
         <div class="setup-right">
             <h3>🛡️ 현재 분대원</h3>
-            <div id="groupList" style="min-height: 200px;"></div>
+            <div id="groupList" style="min-height: 150px; max-height: 200px; overflow-y: auto; margin-bottom: 20px;"></div>
+            
+            <h3 style="border-top: 1px solid #444; padding-top: 15px;">🔗 관계 설정</h3>
+            <div id="relationshipSetup" style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px;">
+                <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+                    <select id="relChar1" style="flex: 1; font-size: 0.8em;"></select>
+                    <span style="align-self: center;">↔</span>
+                    <select id="relChar2" style="flex: 1; font-size: 0.8em;"></select>
+                </div>
+                <div style="display: flex; gap: 5px;">
+                    <select id="relType" style="flex: 1.5; font-size: 0.8em;">
+                        <option value="lover">❤️ 연인</option>
+                        <option value="friend">🤝 절친</option>
+                        <option value="enemy">💀 원수</option>
+                    </select>
+                    <button class="btn btn-add" style="flex: 1; margin: 0; padding: 5px; font-size: 0.8em;" onclick="addManualRelationship()">관계 확정</button>
+                </div>
+                <div id="manualRelList" style="margin-top: 10px; font-size: 0.75em; color: #aaa; max-height: 80px; overflow-y: auto;">
+                    <!-- 설정된 특수 관계가 여기에 표시됨 -->
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button class="btn" style="flex: 1; background: #2c3e50;" onclick="saveTeam()">💾 팀 저장</button>
+                <button class="btn" style="flex: 1; background: #2c3e50;" onclick="document.getElementById('loadTeamFileInput').click()">📂 팀 불러오기</button>
+                <input type="file" id="loadTeamFileInput" accept=".json" style="display: none;" onchange="loadTeam(event)">
+            </div>
             <button class="btn btn-start" id="startBtn" onclick="startSimulation()">작전 시작 (Start)</button>
         </div>
     </div>
@@ -697,7 +747,18 @@
         </div>
 
         <div class="control-area">
-            <button class="btn btn-start" id="nextDayBtn" style="width: 250px;" onclick="processDay()">다음 날 진행 (Next Day) →</button>
+            <div class="auto-next-day-control">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                    <input type="checkbox" id="autoNextDayToggle" style="width: 20px; height: 20px; accent-color: var(--accent-color);">
+                    <span style="font-size: 0.95em; font-weight: 500;">⚡ 자동 진행</span>
+                    <input type="number" id="autoInterval" value="5" min="1" max="5" style="width: 45px; height: 26px; background: #111; border: 1px solid #555; color: #fff; border-radius: 3px; font-size: 0.9em; text-align: center;">
+                    <span style="font-size: 0.95em;">초</span>
+                </label>
+                <div style="font-size: 0.7em; opacity: 0.6; color: #888; margin-top: 4px;">(1~5초 사이 설정 가능)</div>
+            </div>
+            <button class="btn" id="pauseBtn" style="width: 130px; height: 45px; background: #2980b9; margin-top: 0; font-size: 1em;" onclick="togglePause()">⏸️ 일시정지</button>
+            <input type="file" id="loadSimulationFileInput" accept=".json" style="display: none;" onchange="loadSimulation(event)">
+            <button class="btn btn-start" id="nextDayBtn" style="width: 200px; margin-top: 0;" onclick="processDay()">다음 날 진행 →</button>
         </div>
     </div>
 </div>
@@ -770,10 +831,22 @@
 
     let characters = [];
     let currentDay = 1;
+    let manualRelationships = []; // { char1Id, char2Id, type }
     let selectedLoc = LOCATIONS.school; // 기본값
     let difficultyMod = 0; // 기본값
     let gameActive = false;
     let escapeRouteDiscovered = false; // 탈출 경로 발견 여부
+    let isPaused = false; // 일시정지 상태 관리
+
+    // 조합 레시피 정의
+    const RECIPES = {
+        medkit: { name: '구급상자', materials: { cloth: 2, alcohol: 1 }, icon: '🩹' },
+        axe: { name: '소방도끼', materials: { metal: 2, wood: 1 }, icon: '🪓', isWeapon: true, weaponKey: 'axe', maxDur: 5 },
+        pipe: { name: '쇠파이프', materials: { metal: 1, wood: 1 }, icon: '🦯', isWeapon: true, weaponKey: 'pipe', maxDur: 3 },
+        sedative: { name: '정신안정제', materials: { alcohol: 1, chocolate: 1 }, icon: '💊' },
+        ied: { name: '급조폭발물', materials: { alcohol: 2, metal: 1, cloth: 1 }, icon: '💣', isWeapon: true, weaponKey: 'ied', maxDur: 1, reqRoom: '과학실' },
+        vaccine: { name: '특수치료제', materials: { alcohol: 3, sedative: 1 }, icon: '🧪', reqRoom: '과학실' }
+    };
 
     // --- UI 초기화 ---
     function initStatsUI() {
@@ -817,6 +890,31 @@
                 <div class="detail-item">
                     <span style="color:#aaa;">${stat}</span>
                     <span style="color:var(--terminal-green); font-weight:bold;">${val}</span>
+                </div>
+            `;
+        });
+
+        // 조합(Crafting) 인터페이스 추가
+        details.innerHTML += `<div style="grid-column: 1 / -1; margin-top: 15px; border-top: 1px solid #444; padding-top: 10px;"><h4>🛠️ 아이템 조합</h4></div>`;
+        Object.keys(RECIPES).forEach(key => {
+            const recipe = RECIPES[key];
+            const matNames = { cloth: '천', alcohol: '알코올', metal: '금속', wood: '목재', chocolate: '초콜릿', sedative: '정신안정제' };
+            const matInfo = Object.entries(recipe.materials).map(([m, count]) => `${matNames[m] || m} x${count}`).join(', ');
+            
+            const hasMaterials = Object.entries(recipe.materials).every(([m, count]) => (char.inventory[m] || 0) >= count);
+            const isCorrectLoc = !recipe.reqRoom || (selectedLoc && selectedLoc.rooms.includes(recipe.reqRoom));
+            const canCraft = hasMaterials && isCorrectLoc;
+
+            const locNotice = recipe.reqRoom ? `<span style="color:#e67e22; font-size:0.8em;">[필수: ${recipe.reqRoom}]</span> ` : '';
+
+            details.innerHTML += `
+                <div class="detail-item" style="grid-column: 1 / -1; flex-direction: column; align-items: flex-start; gap: 5px;">
+                    <div style="display:flex; justify-content:space-between; width:100%;">
+                        <span>${recipe.icon} ${recipe.name}</span>
+                        <button class="btn btn-add" style="width: auto; margin: 0; padding: 3px 8px; font-size: 0.7em;" 
+                                onclick="craftItem(${char.id}, '${key}')" ${canCraft ? '' : 'disabled'}>제작</button>
+                    </div>
+                    <div style="font-size: 0.75em; color: ${canCraft ? '#888' : '#e74c3c'};">${locNotice}필요: ${matInfo}</div>
                 </div>
             `;
         });
@@ -1096,15 +1194,72 @@
                 hp: 100, fatigue: 0, fear: 0, hunger: 0, thirst: 0, infection: 0,
                 status: 'alive' // alive, dead, zombie, escaped
             },
-            inventory: { medkit: 0, food: 0, water: 0, weapon: 'none', sedative: 0, energyDrink: 0, chocolate: 0 },
+            inventory: { medkit: 0, food: 0, water: 0, weapon: { id: 'none', dur: 0 }, sedative: 0, energyDrink: 0, chocolate: 0, cloth: 0, alcohol: 0, metal: 0, wood: 0 },
             effects: [], // 장기 지속 효과 (부상, 질병 등)
             trust: {}, // 타 캐릭터와의 신뢰도
-            mbti: setupState.ie + setupState.sn + setupState.tf + setupState.jp // MBTI 유형 저장
+            mbti: setupState.ie + setupState.sn + setupState.tf + setupState.jp, // MBTI 유형 저장
+            lastDialogue: '' // 마지막 대사 초기화
         };
 
         characters.push(newChar);
         updateGroupList();
         document.getElementById('inputName').value = '';
+    }
+    
+    // 관계 설정 드롭다운 갱신
+    function updateRelDropdowns() {
+        const s1 = document.getElementById('relChar1');
+        const s2 = document.getElementById('relChar2');
+        s1.innerHTML = '<option value="">대원 선택</option>';
+        s2.innerHTML = '<option value="">대원 선택</option>';
+        
+        characters.forEach(c => {
+            const opt = `<option value="${c.id}">${c.name}</option>`;
+            s1.innerHTML += opt;
+            s2.innerHTML += opt;
+        });
+    }
+
+    function addManualRelationship() {
+        const c1Id = parseInt(document.getElementById('relChar1').value);
+        const c2Id = parseInt(document.getElementById('relChar2').value);
+        const type = document.getElementById('relType').value;
+
+        if (!c1Id || !c2Id || c1Id === c2Id) return alert("서로 다른 두 명의 대원을 선택하세요.");
+
+        // 기존 관계 삭제 (덮어쓰기)
+        manualRelationships = manualRelationships.filter(rel => 
+            !((rel.c1Id === c1Id && rel.c2Id === c2Id) || (rel.c1Id === c2Id && rel.c2Id === c1Id))
+        );
+
+        manualRelationships.push({ c1Id, c2Id, type });
+        updateManualRelList();
+    }
+
+    function updateManualRelList() {
+        const list = document.getElementById('manualRelList');
+        list.innerHTML = '';
+        manualRelationships.forEach((rel, idx) => {
+            const c1 = characters.find(c => c.id === rel.c1Id);
+            const c2 = characters.find(c => c.id === rel.c2Id);
+            if (!c1 || !c2) return;
+
+            let typeStr = "";
+            let color = "";
+            switch(rel.type) {
+                case 'lover': typeStr = "❤️ 연인"; color = "#ff4757"; break;
+                case 'friend': typeStr = "🤝 절친"; color = "var(--info-color)"; break;
+                case 'enemy': typeStr = "💀 원수"; color = "var(--accent-color)"; break;
+            }
+
+            const div = document.createElement('div');
+            div.style.marginBottom = "3px";
+            div.innerHTML = `
+                <span style="color:${color}">${typeStr}</span>: ${c1.name} - ${c2.name} 
+                <span style="cursor:pointer; color:#777; margin-left:5px;" onclick="manualRelationships.splice(${idx}, 1); updateManualRelList();">✖</span>
+            `;
+            list.appendChild(div);
+        });
     }
 
     function updateGroupList() {
@@ -1119,11 +1274,16 @@
             `;
             list.appendChild(item);
         });
+        updateRelDropdowns();
     }
 
     function removeChar(id) {
         characters = characters.filter(c => c.id !== id);
+        // 삭제된 캐릭터와 관련된 관계도 제거
+        manualRelationships = manualRelationships.filter(rel => rel.c1Id !== id && rel.c2Id !== id);
         updateGroupList();
+        updateRelDropdowns();
+        updateManualRelList();
     }
 
     function goToSetup() {
@@ -1135,18 +1295,22 @@
     function log(content, type = '') {
         const win = document.getElementById('logWindow');
         if (!win) return;
+        
         const temp = document.createElement('div');
-        if (content.startsWith('<div')) {
-            temp.innerHTML = content.trim();
-        } else {
-            temp.innerHTML = `<div class="log-entry ${type}">${content}</div>`;
-        }
+        temp.innerHTML = content.startsWith('<div') ? content.trim() : `<div class="log-entry ${type}">${content}</div>`;
+        
         const el = temp.firstElementChild;
         win.appendChild(el);
-        // 스크롤을 즉시 최하단으로 이동 (behavior: smooth는 가끔 끊길 수 있어 설정 변경)
-        win.scrollTop = win.scrollHeight;
-        // 혹은 부드러운 스크롤을 원할 경우:
-        // requestAnimationFrame(() => { win.scrollTo({ top: win.scrollHeight, behavior: 'smooth' }); });
+
+        // 성능 최적화: 로그가 너무 많아지면 오래된 로그 삭제 (최근 100개 유지)
+        while (win.childNodes.length > 100) {
+            win.removeChild(win.firstChild);
+        }
+
+        // 브라우저 렌더링 주기에 맞춰 스크롤 위치 업데이트
+        requestAnimationFrame(() => {
+            win.scrollTop = win.scrollHeight;
+        });
         return el;
     }
 
@@ -1156,7 +1320,9 @@
         // 캐릭터의 특성 중 하나를 무작위로 선택하여 대사 풀 결정
         const selectedTrait = traits[Math.floor(Math.random() * traits.length)];
         const pool = DIALOGUES[type][selectedTrait] || DIALOGUES[type]["default"];
-        return `"${pool[Math.floor(Math.random() * pool.length)]}"`;
+        const dialogueText = pool[Math.floor(Math.random() * pool.length)];
+        char.lastDialogue = dialogueText; // 캐릭터의 마지막 대사 저장
+        return `"${dialogueText}"`;
     }
 
     function applyEffect(char, name, baseDuration, target, mod) {
@@ -1378,16 +1544,19 @@
         let formula = "";
 
         // 원수 방해 로직: 생존한 대원 중 관계가 '원수'인 인원당 성공률 페널티
-        let enemyPenalty = 0;
         const aliveEnemies = characters.filter(other => 
             other.id !== char.id && 
             other.states.status === 'alive' && 
             ((char.trust[other.id] || 50) + (other.trust[char.id] || 50)) / 2 < 20
         );
-        
-        if (aliveEnemies.length > 0) {
-            enemyPenalty = aliveEnemies.length * 8; // 원수 1명당 8% 확률 감소
-        }
+        const enemyPenalty = aliveEnemies.length * 8;
+
+        // 연인 보너스: 15% (강력함)
+        const aliveLovers = characters.filter(other => 
+            other.id !== char.id && other.states.status === 'alive' &&
+            manualRelationships.some(rel => rel.type === 'lover' && ((rel.c1Id === char.id && rel.c2Id === other.id) || (rel.c1Id === other.id && rel.c2Id === char.id)))
+        );
+        const loverBonus = aliveLovers.length * 15;
 
         // 동료 보너스: 관계가 '절친'인 대원당 성공률 보너스
         let friendBonus = 0;
@@ -1397,6 +1566,7 @@
             ((char.trust[other.id] || 50) + (other.trust[char.id] || 50)) / 2 >= 80
         );
         friendBonus = aliveFriends.length * 5;
+        if (loverBonus > 0) friendBonus = 0; // 연인 보너스가 있으면 절친 보너스 중첩 제외
 
         // MBTI 기반 이벤트 성공 확률 보정
         let mbtiEventMod = 0;
@@ -1446,7 +1616,8 @@
         }
 
         // 무기 효과 적용
-        const weapon = WEAPON_TYPES[char.inventory.weapon] || WEAPON_TYPES['none'];
+        const weaponInfo = char.inventory.weapon || { id: 'none', dur: 0 };
+        const weapon = WEAPON_TYPES[weaponInfo.id] || WEAPON_TYPES['none'];
 
         switch(type) {
             case 'detect':
@@ -1509,11 +1680,216 @@
             val += friendBonus;
             formula += ` + 동료 신뢰(+${friendBonus})`;
         }
+        if (loverBonus > 0) {
+            val += loverBonus;
+            formula += ` + 연인의 응원(+${loverBonus})`;
+        }
 
         return { successChance: Math.max(0, Math.min(100, val)), formula };
     }
 
     // --- 시뮬레이션 엔진 ---
+    // 팀 구성만 저장 (시뮬레이션 시작 전)
+    const TEAM_SAVE_VERSION = 1;
+    const SIM_SAVE_VERSION = 2; // 시뮬레이션 저장 파일 버전
+    function saveTeam() {
+        if (characters.length === 0) return alert("저장할 팀원이 없습니다.");
+        
+        const teamData = {
+            version: 1,
+            savedAt: new Date().toISOString(),
+            characters: characters.map(c => ({
+                id: c.id, // 고유 ID 저장 (삭제 로직 작동을 위해 필수)
+                name: c.name,
+                gender: c.gender,
+                age: c.age,
+                mbti: c.mbti,
+                stats: { ...c.stats },
+                states: { ...c.states },
+                inventory: { ...c.inventory }, // 객체 복사
+                effects: c.effects.map(e => ({ ...e })), // 배열 내 각 객체 복사
+                trust: { ...c.trust }, // trust도 저장
+                lastDialogue: c.lastDialogue || '' // 마지막 대사 저장
+            }))
+        };
+        
+        const blob = new Blob([JSON.stringify(teamData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none'; // DOM에 추가하지 않고 다운로드
+        a.href = url;
+        a.download = `team_${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    // 팀 구성만 불러오기 (시뮬레이션 시작 전)
+    // 팀 불러오기 기능
+    function loadTeam(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const teamData = JSON.parse(e.target.result);
+                if (!teamData.characters) throw new Error('Invalid format');
+                
+                characters = teamData.characters.map(c => ({
+                    ...c,
+                    states: { ...c.states, status: 'alive', infection: 0 },
+                    effects: []
+                }));
+                
+                updateGroupList();
+                alert(`팀을 불러왔습니다. ${characters.length}명`);
+            } catch (err) {
+                alert('파일 읽기 실패: ' + err.message);
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = '';
+    }
+
+    // 버전 관리 및 데이터 마이그레이션 (호환성 유지)
+    function migrateSimulationData(data) {
+        const version = data.version || 1; // Default to 1 if version is not present
+
+        if (version < 2) {
+            // v1 -> v2 migration: manualRelationships might be missing, weapon format might be string
+            if (data.manualRelationships === undefined) {
+                data.manualRelationships = [];
+            }
+            // Migrate weapon format in characters if it's a string
+            data.characters = data.characters.map(c => ({
+                ...c,
+                inventory: {
+                    ...c.inventory,
+                    weapon: typeof c.inventory.weapon === 'string' ? { id: c.inventory.weapon, dur: WEAPON_TYPES[c.inventory.weapon]?.maxDur || 0 } : c.inventory.weapon
+                }
+            }));
+            data.version = 2; // Update version after migration
+        }
+        // Add more migration steps here for future versions
+
+        return data;
+    }
+
+    // 전체 시뮬레이션 상태 저장 (시뮬레이션 중)
+    function saveSimulation() {
+        const simulationData = {
+            version: SIM_SAVE_VERSION, // 정의된 버전 상수를 사용
+            savedAt: new Date().toISOString(),
+            currentDay: currentDay,
+            selectedLocName: selectedLoc.name, // 장소 이름만 저장
+            difficultyMod: difficultyMod,
+            escapeRouteDiscovered: escapeRouteDiscovered,
+            manualRelationships: manualRelationships,
+            characters: characters.map(c => ({
+                id: c.id,
+                name: c.name,
+                gender: c.gender,
+                age: c.age,
+                mbti: c.mbti,
+                stats: { ...c.stats },
+                states: { ...c.states },
+                inventory: { ...c.inventory },
+                effects: c.effects.map(e => ({ ...e })),
+                trust: { ...c.trust } // trust도 저장
+            }))
+        };
+
+        const blob = new Blob([JSON.stringify(simulationData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none'; // DOM에 추가하지 않고 다운로드
+        a.href = url;
+        a.download = `simulation_day${currentDay}_${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        alert("시뮬레이션 상태가 저장되었습니다.");
+    }
+
+    // 전체 시뮬레이션 상태 불러오기 (시뮬레이션 시작 전 또는 중)
+    function loadSimulation(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const simulationData = JSON.parse(e.target.result);
+                if (!simulationData.characters || simulationData.currentDay === undefined) throw new Error('Invalid simulation save format');
+
+                currentDay = simulationData.currentDay;
+                selectedLoc = LOCATIONS[Object.keys(LOCATIONS).find(key => LOCATIONS[key].name === simulationData.selectedLocName)];
+                difficultyMod = simulationData.difficultyMod;
+                escapeRouteDiscovered = simulationData.escapeRouteDiscovered;
+                manualRelationships = simulationData.manualRelationships || []; // 관계 데이터가 없을 경우 빈 배열
+                characters = simulationData.characters.map(c => ({
+                    ...c,
+                    stats: { ...c.stats },
+                    states: { ...c.states },
+                    inventory: { ...c.inventory },
+                    effects: c.effects.map(eff => ({ ...eff })),
+                    trust: { ...c.trust },
+                    lastDialogue: c.lastDialogue || '' // 마지막 대사 로드
+                }));
+
+                gameActive = true; // 불러오면 게임 활성화
+                // UI 전환
+                document.getElementById('introPanel').classList.add('hidden');
+                document.getElementById('setupPanel').classList.add('hidden');
+                document.getElementById('simPanel').classList.remove('hidden');
+
+                updateStatusBoard();
+                updateRelationshipBoard();
+                log(`<div class="log-entry system">💾 시뮬레이션 상태를 불러왔습니다. (DAY ${currentDay})</div>`);
+                alert(`시뮬레이션 상태를 불러왔습니다. (DAY ${currentDay})`);
+            } catch (err) {
+                alert('시뮬레이션 불러오기 실패: ' + err.message);
+                console.error('Load simulation error:', err);
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = '';
+    }
+
+    // 재시작 기능
+    function restartGame() {
+        // 게임 상태 초기화
+        gameActive = false;
+        isPaused = false;
+        currentDay = 1;
+        manualRelationships = []; // 관계 초기화
+        escapeRouteDiscovered = false; // 탈출 경로 발견 여부 초기화
+        if (autoNextDayTimer) { clearTimeout(autoNextDayTimer); autoNextDayTimer = null; }
+        
+        // 캐릭터 상태 초기화
+        characters.forEach(c => {
+            c.states.status = 'alive';
+            c.states.hp = 100;
+            c.states.hunger = 0;
+            c.states.thirst = 0;
+            c.states.fatigue = 0;
+            c.states.fear = 0;
+            c.states.infection = 0;
+            c.effects = [];
+            c.inventory.weapon = { id: 'none', dur: 0 };
+        });
+        
+        // UI 초기화
+        document.getElementById('simPanel').classList.add('hidden');
+        document.getElementById('setupPanel').classList.remove('hidden');
+        document.getElementById('nextDayBtn').classList.remove('hidden');
+        document.getElementById('nextDayBtn').disabled = false;
+        
+        // 로그 클리어
+        document.getElementById('logWindow').innerHTML = '';
+        
+        updateGroupList();
+    }
+
     async function startSimulation() {
         if (characters.length === 0) return alert("최소 한 명의 캐릭터가 필요합니다.");
 
@@ -1532,6 +1908,7 @@
             c1.states.hp = difficultyMod >= 40 ? 80 : 100; // 지옥 난이도는 낮은 체력으로 시작
             c1.states.fatigue = initialNeed / 2;
 
+            // 기본 신뢰도 (MBTI 기반)
             characters.forEach(c2 => {
                 if (c1.id !== c2.id) {
                     const mbtiMod = calculateMbtiCompatibilityScore(c1.mbti, c2.mbti);
@@ -1540,12 +1917,71 @@
             });
         });
 
-        document.getElementById('setupPanel').classList.add('hidden');
+        // 사용자 수동 관계 적용 (강제 신뢰도 조정)
+        manualRelationships.forEach(rel => {
+            const c1 = characters.find(c => c.id === rel.c1Id);
+            const c2 = characters.find(c => c.id === rel.c2Id);
+            if (!c1 || !c2) return;
+
+            let trustVal = 50;
+            if (rel.type === 'lover') trustVal = 100;
+            else if (rel.type === 'friend') trustVal = 90;
+            else if (rel.type === 'enemy') trustVal = 5;
+
+            c1.trust[c2.id] = trustVal;
+            c2.trust[c1.id] = trustVal;
+        });
+        document.getElementById('setupPanel').classList.add('hidden'); // 설정 패널 숨기기
         document.getElementById('simPanel').classList.remove('hidden');
         gameActive = true;
         
         log(`<div class="log-entry system">📍 시뮬레이션 시작: ${selectedLoc.name}</div>`);
         await processDay();
+    }
+
+    // 일시정지 토글 함수
+    function togglePause() {
+        isPaused = !isPaused;
+        const btn = document.getElementById('pauseBtn');
+        if (isPaused) {
+            btn.innerHTML = "▶️ 재개";
+            btn.style.background = "#27ae60";
+            if (autoNextDayTimer) { clearTimeout(autoNextDayTimer); autoNextDayTimer = null; }
+            log(`<div class="log-entry system" style="color: #3498db;">⏸️ 시뮬레이션이 일시정지되었습니다.</div>`);
+        } else {
+            btn.innerHTML = "⏸️ 일시정지";
+            btn.style.background = "#2980b9";
+            log(`<div class="log-entry system" style="color: #2ecc71;">▶️ 시뮬레이션을 재개합니다.</div>`);
+            const autoNextDayToggle = document.getElementById('autoNextDayToggle');
+            if (autoNextDayToggle && autoNextDayToggle.checked) processDay();
+        }
+    }
+
+    // 조합(Craft) 기능 구현
+    function craftItem(charId, recipeKey) {
+        const char = characters.find(c => c.id === charId);
+        const recipe = RECIPES[recipeKey];
+        if (!char || !recipe) return;
+
+        // 재료 소모
+        for (const [mat, count] of Object.entries(recipe.materials)) {
+            char.inventory[mat] -= count;
+        }
+
+        // 결과물 추가
+        if (recipe.isWeapon) {
+            char.inventory.weapon = { id: recipe.weaponKey, dur: recipe.maxDur };
+            log(`<div class="log-entry system" style="color: var(--success-color);">🛠️ ${char.name}이(가) 재료를 모아 [${recipe.name}]을(를) 제작하여 장착했습니다!</div>`);
+        } else if (recipeKey === 'vaccine') {
+            char.states.infection = Math.max(0, char.states.infection - 50);
+            log(`<div class="log-entry system" style="color: var(--info-color);">🧪 ${char.name}이(가) [특수치료제]를 제작하여 즉시 복용했습니다! 감염도가 크게 감소합니다.</div>`);
+        } else {
+            char.inventory[recipeKey]++;
+            log(`<div class="log-entry system" style="color: var(--success-color);">🛠️ ${char.name}이(가) 재료를 모아 [${recipe.name}]을(를) 제작했습니다.</div>`);
+        }
+        
+        updateStatusBoard();
+        showCharDetails(charId); // 모달 UI 갱신
     }
 
     function updateStatusBoard() {
@@ -1569,7 +2005,8 @@
             
             const hpColor = c.states.hp > 50 ? 'var(--success-color)' : (c.states.hp > 20 ? '#f1c40f' : 'var(--accent-color)');
             const infColor = c.states.infection > 50 ? 'var(--accent-color)' : '#9b59b6';
-            const weapon = WEAPON_TYPES[c.inventory.weapon] || WEAPON_TYPES['none'];
+            const weaponInfo = c.inventory.weapon || { id: 'none', dur: 0 };
+            const weapon = WEAPON_TYPES[weaponInfo.id] || WEAPON_TYPES['none'];
 
             const effectsHtml = c.effects.length > 0 ?
                 `<div style="margin-top:5px; color:#e67e22; font-size:0.75em;">🔸 ${c.effects.map(e => `${e.name}(${e.duration}d)`).join(', ')}</div>` : '';
@@ -1587,8 +2024,11 @@
                 <div style="margin-top:5px; font-size:0.75em; color:#3498db; background:rgba(0,0,0,0.3); padding:4px; border-radius:4px;">
                     🎒 🩹x${c.inventory.medkit} 🍞x${c.inventory.food} 💧x${c.inventory.water} 💊x${c.inventory.sedative} ⚡x${c.inventory.energyDrink} 🍫x${c.inventory.chocolate}
                 </div>
+                <div style="margin-top:2px; font-size:0.7em; color:#888; padding-left:4px;">
+                    재료: 🧶x${c.inventory.cloth} 🧪x${c.inventory.alcohol} ⛓️x${c.inventory.metal} 🪵x${c.inventory.wood}
+                </div>
                 <div style="margin-top:5px; font-size:0.8em; color:#f1c40f; padding: 2px 0;">
-                    ⚔️ 장비: <strong>${weapon.icon} ${weapon.name}</strong>
+                    ⚔️ 장비: <strong>${weapon.icon} ${weapon.name} ${weaponInfo.dur > 0 ? `(내구:${weaponInfo.dur})` : ''}</strong>
                 </div>
                 <div style="font-size:0.85em; margin-top:5px;">
                     감염도
@@ -1618,14 +2058,20 @@
                 const charA = aliveChars[i];
                 const charB = aliveChars[j];
 
-                // 두 캐릭터 간 신뢰도의 평균값 계산
                 const trustVal = Math.round(((charA.trust[charB.id] || 50) + (charB.trust[charA.id] || 50)) / 2);
                 const mbtiScore = calculateMbtiCompatibilityScore(charA.mbti, charB.mbti);
                 const mbtiGrade = mbtiScore >= 40 ? "上" : (mbtiScore < 0 ? "下" : "中");
 
+                // 특수 관계 체크
+                const manualRel = manualRelationships.find(rel => 
+                    (rel.c1Id === charA.id && rel.c2Id === charB.id) || (rel.c1Id === charB.id && rel.c2Id === charA.id)
+                );
+
                 let statusText = "😐 보통";
                 let color = "#aaa";
-                if (trustVal < 20) { statusText = "💀 원수"; color = "var(--accent-color)"; }
+                
+                if (manualRel && manualRel.type === 'lover') { statusText = "❤️ 연인"; color = "#ff4757"; }
+                else if (trustVal < 20) { statusText = "💀 원수"; color = "var(--accent-color)"; }
                 else if (trustVal < 40) { statusText = "😒 소원"; color = "#ffa502"; }
                 else if (trustVal < 60) { statusText = "😐 보통"; color = "#aaa"; }
                 else if (trustVal < 80) { statusText = "😊 친구"; color = "var(--terminal-green)"; }
@@ -1691,10 +2137,14 @@
     let autoNextDayTimer = null;
     async function processDay() {
         if (!gameActive || SoundManager.isProcessing) return;
-        SoundManager.isProcessing = true;
+        
+        // 기존 타이머 확실히 제거하여 중복 실행 방지
+        if (autoNextDayTimer) { 
+            clearTimeout(autoNextDayTimer); 
+            autoNextDayTimer = null; 
+        }
 
-        // 기존 타이머 확실히 제거
-        if (autoNextDayTimer) { clearTimeout(autoNextDayTimer); autoNextDayTimer = null; }
+        SoundManager.isProcessing = true;
         const nextBtn = document.getElementById('nextDayBtn');
         nextBtn.disabled = true;
 
@@ -1705,8 +2155,14 @@
         }
 
         SoundManager.playDayChange(); // 하루가 지날 때마다 효과음 재생
-        log(`<div class="log-day-tag">📅 DAY ${currentDay}</div>`);
-        await sleep(500);
+        log(`<div>
+                <div class="log-day-tag">📅 DAY ${currentDay}</div>
+                <div style="margin: -5px 0 15px 0; display: flex; gap: 8px;">
+                    <button class="btn" style="width: auto; background: #27ae60; padding: 6px 14px; font-size: 0.8em; margin: 0;" onclick="saveSimulation()">💾 저장하기</button>
+                    <button class="btn" style="width: auto; background: #5c0000; color: white; padding: 6px 14px; font-size: 0.8em; margin: 0;" onclick="document.getElementById('loadSimulationFileInput').click()">📂 불러오기</button>
+                </div>
+             </div>`);
+        await sleep(2000); // 2초 대기하여 사용자가 저장/로드를 고려할 시간을 줌
 
         for (let char of characters) {
             // 0-1. 좀비가 된 동료의 행동
@@ -1731,6 +2187,27 @@
 
             // 1. 상태 악화
             // 장기 효과 턴 감소 및 처리
+            
+            // [연인 상실 트리거]
+            const loverRel = manualRelationships.find(rel => rel.c1Id === char.id || rel.c2Id === char.id);
+            if (loverRel && loverRel.type === 'lover') {
+                const partnerId = loverRel.c1Id === char.id ? loverRel.c2Id : loverRel.c1Id;
+                const partner = characters.find(c => c.id === partnerId);
+                if (partner && (partner.states.status === 'dead' || partner.states.status === 'zombie')) {
+                    if (!char.effects.some(e => e.name === "상실감")) {
+                        applyEffect(char, "상실감", 99, "all", -20);
+                        char.states.fear = 100;
+                        log(`<div class="log-entry system" style="background: rgba(231, 76, 60, 0.2); border: 1px solid red;">💔 ${char.name}은(는) 연인 ${partner.name}을(를) 잃고 삶의 의지를 상실했습니다.</div>`);
+                    }
+                }
+            }
+
+            // 1-1. 지속적 감염 진행 (한 번 감염되면 매일 20% 상승, 5일이면 좀비화)
+            if (char.states.infection > 0 && char.states.infection < 100) {
+                char.states.infection = Math.min(100, char.states.infection + 20);
+                log(`<div class="log-entry system" style="color: #9b59b6; font-size: 0.85em; border: none; background: transparent; text-align: left;">☣️ ${char.name}의 몸속에서 바이러스가 증식하고 있습니다. (감염도 +20%)</div>`);
+            }
+
             char.effects = char.effects.filter(effect => {
                 effect.duration--;
                 if (effect.duration > 0) return true;
@@ -1792,9 +2269,13 @@
         SoundManager.isProcessing = false;
         nextBtn.disabled = false;
 
-        // 자동 다음 날 진행 (5초 뒤)
-        if (gameActive) {
-            autoNextDayTimer = setTimeout(processDay, 5000);
+        // 시뮬레이션이 종료되지 않았고, 일시정지 상태가 아니며, 자동 진행이 체크된 경우에만 타이머 예약
+        if (!gameActive) return;
+
+        const autoNextDayToggle = document.getElementById('autoNextDayToggle');
+        if (autoNextDayToggle && autoNextDayToggle.checked && !isPaused) {
+            const interval = (parseInt(document.getElementById('autoInterval').value) || 5) * 1000;
+            autoNextDayTimer = setTimeout(processDay, interval);
         }
     }
 
@@ -1845,6 +2326,16 @@
                     const com = calculateProbability('combat', char, selectedLoc);
                     entry.innerHTML += `<div class="log-situation" style="color: var(--accent-color);">⚠️ 발각되었다! 강제 전투에 돌입했다.</div>`;
                     entry.innerHTML += `<div class="log-dialogue">${getDialogue('combat', char)}</div>`;
+                    
+                    // 무기 내구도 감소
+                    if (char.inventory.weapon && char.inventory.weapon.id !== 'none') {
+                        char.inventory.weapon.dur--;
+                        if (char.inventory.weapon.dur <= 0) {
+                            entry.innerHTML += `<div style="color:#e74c3c; font-weight:bold;">📢 무기 [${WEAPON_TYPES[char.inventory.weapon.id].name}]이(가) 파손되었습니다!</div>`;
+                            char.inventory.weapon = { id: 'none', dur: 0 };
+                        }
+                    }
+
                     if (entry.innerHTML.includes('원수 방해')) entry.innerHTML += `<div style="font-size:0.8em; color:#e74c3c;">(분대 내 원수의 비협조가 치명적이었다!)</div>`;
                     await sleep(500);
                     if (Math.random() * 100 < com.successChance) {
@@ -1892,30 +2383,25 @@
                 if (Math.random() * 100 < searchChance) {
                     SoundManager.playSuccess();
 
-                    const findRand = Math.random();
-                    if (findRand < 0.15) {
+                    const findRand = Math.random() * 100;
+                    if (findRand < 10) {
                         char.inventory.medkit++;
                         entry.innerHTML += `<div class="log-result" style="color: #f1c40f;">🩹 구급 상자를 확보했다!</div>`;
-                    } else if (findRand < 0.35) {
+                    } else if (findRand < 25) {
                         char.inventory.food++;
                         entry.innerHTML += `<div class="log-result" style="color: var(--info-color);">🍞 통조림을 하나 발견했다.</div>`;
-                    } else if (findRand < 0.55) {
+                    } else if (findRand < 40) {
                         char.inventory.water++;
                         entry.innerHTML += `<div class="log-result" style="color: var(--info-color);">💧 깨끗한 물 한 병을 얻었다.</div>`;
-                    } else if (findRand < 0.70) {
-                        char.inventory.sedative++;
-                        entry.innerHTML += `<div class="log-result" style="color: #a29bfe;">💊 정신 안정제를 찾았다!</div>`;
-                    } else if (findRand < 0.85) {
-                        char.inventory.energyDrink++;
-                        entry.innerHTML += `<div class="log-result" style="color: #f1c40f;">⚡ 에너지 드링크를 발견했다!</div>`;
-                    } else if (findRand < 0.90) {
-                        char.inventory.chocolate++;
-                        entry.innerHTML += `<div class="log-result" style="color: #e17055;">🍫 초콜릿 바 하나를 주웠다.</div>`;
+                    } else if (findRand < 60) {
+                        // 재료 획득 확률 증가
+                        const mats = ['cloth', 'alcohol', 'metal', 'wood'];
+                        const m = mats[Math.floor(Math.random() * mats.length)];
+                        char.inventory[m]++;
+                        const mName = m === 'cloth' ? '천' : m === 'alcohol' ? '알코올' : m === 'metal' ? '금속' : '목재';
+                        entry.innerHTML += `<div class="log-result" style="color: #aaa;">🛠️ 제작 재료 [${mName}]을(를) 주웠다.</div>`;
                     } else {
-                        const weaponKeys = Object.keys(WEAPON_TYPES).filter(k => k !== 'none');
-                        const newWeapon = weaponKeys[Math.floor(Math.random() * weaponKeys.length)];
-                        char.inventory.weapon = newWeapon;
-                        entry.innerHTML += `<div class="log-result" style="color: var(--success-color);">⚔️ 새로운 무기 [${WEAPON_TYPES[newWeapon].name}]을(를) 획득했다!</div>`;
+                        entry.innerHTML += `<div class="log-result">🏚️ 쓸만한 부품들을 몇 개 챙겼습니다.</div>`;
                     }
                 } else {
                     if (Math.random() * 100 < 20) { // 20% 확률로 식중독
@@ -1935,7 +2421,7 @@
                 await sleep(400);
                 
                 SoundManager.playSuccess();
-                char.inventory.weapon = foundWeapon;
+                char.inventory.weapon = { id: foundWeapon, dur: WEAPON_TYPES[foundWeapon].maxDur }; // 무기 객체 형태로 저장
                 entry.innerHTML += `<div class="log-result" style="color: var(--success-color);">기존 장비를 버리고 [${WEAPON_TYPES[foundWeapon].name}]을(를) 장착했다.</div>`;
                 break;
 
@@ -2047,6 +2533,42 @@
         }
     }
 
+    // 시뮬레이션 로그 및 결과 텍스트 파일 내보내기
+    function exportSimulationLog() {
+        const logWindow = document.getElementById('logWindow');
+        let textContent = "=== 좀비 아포칼립스 시뮬레이션 최종 보고서 ===\n\n";
+        textContent += "생성 일자: " + new Date().toLocaleString() + "\n";
+        textContent += "최종 생존 기간: " + (currentDay - 1) + "일\n";
+        textContent += "시작 장소: " + selectedLoc.name + "\n\n";
+        
+        textContent += "--- [최종 대원 현황] ---\n";
+        characters.forEach(c => {
+            let charStatus = `[${c.name}] MBTI: ${c.mbti}, 상태: ${c.states.status.toUpperCase()}, HP: ${Math.ceil(c.states.hp)}, 감염도: ${Math.ceil(c.states.infection)}%`;
+            if (c.lastDialogue && c.states.status === 'alive') { // 생존 중인 캐릭터의 마지막 대사만 기록
+                charStatus += `, 마지막 대사: "${c.lastDialogue}"`;
+            }
+            textContent += charStatus + "\n";
+        });
+        
+        textContent += "\n--- [전체 시뮬레이션 로그] ---\n";
+        const entries = logWindow.querySelectorAll('.log-entry, .log-day-tag, .log-day-tag + div');
+        entries.forEach(el => {
+            if (el.classList.contains('log-day-tag')) {
+                textContent += `\n${el.innerText}\n`;
+            } else if (!el.querySelector('button')) { // 버튼이 포함된 요소(저장/불러오기)는 제외
+                textContent += `${el.innerText.replace(/\n/g, ' ')}\n`;
+            }
+        });
+
+        const blob = new Blob([textContent], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `zombie_sim_report_day${currentDay-1}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
     function finishGame() {
         gameActive = false;
         if (autoNextDayTimer) { clearTimeout(autoNextDayTimer); autoNextDayTimer = null; }
@@ -2061,6 +2583,10 @@
             <div style="color: var(--success-color);">🚁 탈출 성공: ${escaped}명</div>
             <div style="color: var(--accent-color);">💀 사망: ${dead}명</div>
             <div style="color: #2ecc71;">🧟 좀비화: ${zombie}명</div>
+            <div style="margin-top: 15px; display: flex; gap: 10px;">
+                <button class="btn" style="background: #2980b9; margin: 0;" onclick="exportSimulationLog()">📄 기록 저장하기</button>
+                <button class="btn" style="background: var(--accent-color); margin: 0;" onclick="restartGame()">🔄 다시 시작</button>
+            </div>
             <div style="margin-top: 10px; font-size: 0.9em; color: #888;">시뮬레이션 종료. 기록 보존됨.</div>
         </div>`;
         log(summary);
