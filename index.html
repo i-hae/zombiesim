@@ -315,7 +315,7 @@
         .log-window {
             background: #0a0a0a;
             padding: 25px;
-            font-family: 'Pretendard', sans-serif;
+            font-family: 'IbmPlexSans', sans-serif;
             color: #bbb;
             position: relative;
             grid-column: 2;
@@ -423,29 +423,29 @@
             .intro-panel { padding: 20px; width: 100%; box-sizing: border-box; }
             .selection-grid { flex-wrap: wrap; }
             .selection-card { min-width: 100px; padding: 10px; }
-            .setup-panel { flex-direction: column; gap: 20px; height: auto; }
+            .setup-panel { flex-direction: column; gap: 20px; height: auto; overflow-y: visible; }
             .setup-left { flex: none; width: 100%; }
             .setup-right { flex: none; width: 100%; border-left: none; border-top: 1px solid #444; padding-left: 0; padding-top: 20px; }
             #statsInputs { grid-template-columns: 1fr 1fr; }
 
             .sim-panel {
-                display: flex;
-                flex-direction: row;
-                overflow-x: auto;
-                scroll-snap-type: x mandatory;
+                display: block;
+                position: relative;
                 gap: 0;
-                height: calc(100vh - 60px);
+                height: 100vh;
                 -webkit-overflow-scrolling: touch;
             }
 
             .mobile-tab-bar { display: grid; }
 
             .status-board, .log-window, .relationship-board {
-                display: none; /* 모바일에서는 기본적으로 숨김 */
+                display: none;
                 width: 100%;
-                height: calc(100vh - 150px);
+                /* 탭 바(60px)를 제외한 높이 설정 */
+                height: calc(100vh - 60px); 
                 margin: 0;
-                padding: 15px 15px 100px 15px; /* 하단 버튼 공간 확보를 위한 패딩 */
+                /* 하단 컨트롤 영역(약 120px) + 여유 공간을 위해 패딩 증가 */
+                padding: 15px 15px 180px 15px; 
                 box-sizing: border-box;
                 overflow-y: auto;
                 overflow-x: hidden !important;
@@ -466,20 +466,48 @@
                 height: auto;
                 border-bottom: none;
                 border-left: 4px solid var(--accent-color);
+                font-size: 0.95em;
+                padding: 18px;
+                margin-bottom: 12px;
             }
+
+            /* 캐릭터 카드 내부 텍스트 및 가독성 개선 */
+            .char-card strong { font-size: 1.2em !important; }
+            .char-card div[style*="display:grid"] { 
+                font-size: 0.9em !important; 
+                gap: 8px 12px !important;
+            }
+            /* 소지품 창 가독성 */
+            .char-card div[style*="background:rgba(0,0,0,0.3)"] {
+                font-size: 0.85em !important;
+                padding: 10px !important;
+                line-height: 1.5;
+                border-radius: 8px;
+            }
+            /* 관계 카드 텍스트 크기 조정 */
+            .relationship-board .char-card span[style*="font-size:0.9em"] { font-size: 1.05em !important; }
+            .relationship-board .char-card div[style*="font-size:0.75em"] { font-size: 0.9em !important; }
+
             .log-day-tag { display: block; width: 100%; margin: 10px 0; }
 
             .control-area {
                 position: fixed;
-                bottom: 60px; /* 탭 바 위로 */
+                bottom: 60px;
                 left: 0;
                 width: 100%;
-                padding: 10px;
-                background: linear-gradient(to top, rgba(15,15,15,1), rgba(15,15,15,0));
-                justify-content: center;
+                padding: 15px 10px;
+                /* 상단으로 갈수록 투명해지는 배경으로 콘텐츠 가독성 확보 */
+                background: linear-gradient(to top, rgba(15,15,15,1) 70%, rgba(15,15,15,0.8) 90%, rgba(15,15,15,0));
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: space-evenly;
+                align-items: center;
+                gap: 8px;
                 z-index: 999;
             }
-            .btn-start { width: 90% !important; margin-bottom: 10px; }
+            .btn-start { width: 45% !important; margin-top: 0; font-size: 0.9em; height: 45px; }
+            #pauseBtn { width: 35% !important; font-size: 0.9em; height: 45px; }
+            .auto-next-day-control { padding: 5px 10px; scale: 0.9; }
         }
 
         /* 상세 정보 모달 스타일 */
@@ -575,7 +603,7 @@
     </style>
 </head>
 <body>
-
+ 
 <div class="container">
     <!-- 인트로 패널 -->
     <div class="intro-panel" id="introPanel">
