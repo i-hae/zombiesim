@@ -793,7 +793,7 @@
 
 <script>
     // --- 데이터 정의 ---
-    const STAT_NAMES = ["시력", "청력", "체력", "면역력", "근력", "속도", "순발력", "지능", "행동력", "정신력", "인내력", "사교성", "판단력"];
+    const STAT_NAMES = ["시력", "청력", "체력", "면역력", "근력", "속도", "순발력", "지능", "행동력", "정신력", "인내력", "사교성", "판단력", "행운", "충동"];
 
     const WEAPON_TYPES = {
         'none': { name: '맨손', icon: '👊', combat: 0, detect: 0, escape: 0 },
@@ -1518,7 +1518,6 @@
     }
 
     function calculateMbtiCompatibilityScore(mbti1, mbti2) {
-        let score = 0; // Max 40 (all match), Min -20 (all opposite)
         // 제공된 이미지(MBTI 상성표)의 데이터 매핑
         const idealMatches = {
             'INFP': ['ENFJ', 'ENTJ'], 'ENFP': ['INFJ', 'INTJ'], 'INFJ': ['ENFP', 'ENTP'], 'ENFJ': ['INFP', 'ISFP'],
@@ -1541,18 +1540,11 @@
 
         if ((isNF1 && isS2) || (isS1 && isNF2)) return -20;
 
-        // 3. 그 외의 궁합 (보통 ~ 좋음) - 이미지의 노란색/연두색
+        // 3. 그 외의 궁합 (보통 ~ 좋음)
         let baseScore = 0;
         for (let i = 0; i < 4; i++) {
-            const char1Type = mbti1[i];
-            const char2Type = mbti2[i];
-
-            if (char1Type === char2Type) {
-                score += 10; // Matching trait
-            } else {
-                score -= 5; // Opposite trait (slight friction)
-            }
-            if (mbti1[i] === mbti2[i]) baseScore += 5;
+            // 각 지표가 일치할 때마다 점수 추가
+            if (mbti1[i] === mbti2[i]) baseScore += 10;
         }
         return baseScore; // 0 ~ 20점 사이 결정
     }
@@ -1652,20 +1644,24 @@
                 base = 30;
                 const listenMod = char.stats['청력'] * 4;
                 const sightMod = char.stats['시력'] * 3;
-                val += base + listenMod + sightMod + env.stealthMod + weapon.detect;
-                formula = `${base} + 청력(${listenMod}) + 시력(${sightMod}) + 환경(${env.stealthMod}) + 무기(${weapon.detect})`;
+                const luckMod = char.stats['행운'] * 2;
+                const impulseMod = char.stats['충동'] * 3;
+                val += base + listenMod + sightMod + luckMod - impulseMod + env.stealthMod + weapon.detect;
+                formula = `${base} + 청력(${listenMod}) + 시력(${sightMod}) + 행운(${luckMod}) - 충동(${impulseMod}) + 환경(${env.stealthMod}) + 무기(${weapon.detect})`;
                 break;
             case 'escape':
                 base = 25;
                 const speedMod = char.stats['속도'] * 5;
                 const reflexMod = char.stats['순발력'] * 4;
-                val += base + speedMod + reflexMod + env.escapeMod + weapon.escape;
-                formula = `${base} + 속도(${speedMod}) + 순발력(${reflexMod}) + 환경(${env.escapeMod}) + 무기(${weapon.escape})`;
+                const luckEsc = char.stats['행운'] * 3;
+                val += base + speedMod + reflexMod + luckEsc + env.escapeMod + weapon.escape;
+                formula = `${base} + 속도(${speedMod}) + 순발력(${reflexMod}) + 행운(${luckEsc}) + 환경(${env.escapeMod}) + 무기(${weapon.escape})`;
                 break;
             case 'combat':
                 base = 20;
-                val += base + (char.stats['근력'] * 6) + (char.stats['체력'] * 3) + weapon.combat;
-                formula = `20 + (근력:${char.stats['근력']}×6) + (체력:${char.stats['체력']}×3) + 무기(${weapon.combat})`;
+                const impulseCmb = char.stats['충동'] * 4;
+                val += base + (char.stats['근력'] * 6) + (char.stats['체력'] * 3) + impulseCmb + weapon.combat;
+                formula = `20 + (근력:${char.stats['근력']}×6) + (체력:${char.stats['체력']}×3) + 충동(${impulseCmb}) + 무기(${weapon.combat})`;
                 break;
             case 'infection':
                 base = 50;
@@ -1674,14 +1670,16 @@
                 break;
             case 'conflict':
                 base = 30;
-                val += base + (char.stats['사교성'] * 5) + (char.stats['판단력'] * 3);
-                formula = `30 + (사교:${char.stats['사교성']}×5) + (판단:${char.stats['판단력']}×3)`;
+                const impulseCon = char.stats['충동'] * 4;
+                val += base + (char.stats['사교성'] * 5) + (char.stats['판단력'] * 3) - impulseCon;
+                formula = `30 + (사교:${char.stats['사교성']}×5) + (판단:${char.stats['판단력']}×3) - 충동(${impulseCon})`;
                 break;
             case 'search':
                 base = 35;
                 const intelMod = char.stats['지능'] * 4;
-                val += base + intelMod;
-                formula = `${base} + 지능(${intelMod})`;
+                const luckSearch = char.stats['행운'] * 6;
+                val += base + intelMod + luckSearch;
+                formula = `${base} + 지능(${intelMod}) + 행운(${luckSearch})`;
                 break;
             case 'hazard':
                 base = 35;
@@ -2310,6 +2308,93 @@
     async function generateEvent(char) {
         const eventTypes = ['search', 'zombie', 'conflict', 'rest', 'move', 'coop', 'hazard'];
         const rand = Math.random() * 100;
+        const impulseVal = char.stats['충동'] || 5; // 중복 선언 제거 및 통합
+
+        // --- 행운 스탯에 따른 불운한 징조 (Bad Omens) ---
+        const luckVal = char.stats['행운'] || 5;
+        // 행운이 5 미만일 때 확률적으로 발생 (행운 1일 때 최대 40% 확률)
+        if (luckVal < 5 && Math.random() * 100 < (5 - luckVal) * 10) {
+            const badOmens = [
+                { 
+                    msg: "길을 걷다 발을 헛디뎌 넘어졌습니다. 소음이 발생하고 무릎을 다칩니다.", 
+                    effect: () => { char.states.hp -= 5; char.states.fear += 10; SoundManager.playAlert(); }
+                },
+                { 
+                    msg: "낡은 배낭의 실밥이 터지며 소지품 일부가 바닥으로 쏟아져 사라졌습니다.", 
+                    effect: () => { 
+                        const items = ['cloth', 'alcohol', 'metal', 'wood', 'food', 'water', 'energyDrink', 'chocolate'];
+                        const lostItem = items[Math.floor(Math.random() * items.length)];
+                        if (char.inventory[lostItem] > 0) char.inventory[lostItem]--;
+                    }
+                },
+                { 
+                    msg: "불길한 까마귀 울음소리가 들려옵니다. 왠지 모를 불안감이 엄습합니다.", 
+                    effect: () => { char.states.fear = Math.min(100, char.states.fear + 20); }
+                }
+            ];
+            
+            const omen = badOmens[Math.floor(Math.random() * badOmens.length)];
+            log(`<div class="log-entry zombie" style="border-left-color: #7f8c8d; background: rgba(127, 140, 141, 0.1);">
+                <span class="log-char-name">💀 불운한 징조: ${char.name}</span>
+                <div class="log-situation">${omen.msg}</div>
+            </div>`);
+            omen.effect();
+            await sleep(600);
+            updateStatusBoard();
+        }
+
+        // --- 충동 스탯에 따른 돌발 행동 이벤트 (Impulsive Actions) ---
+        // 충동 스탯이 높을수록(최대 10) 돌발 행동 확률 증가 (최대 25%)
+        if (Math.random() * 100 < (impulseVal * 2.5)) {
+            const impulsiveActions = [
+                { 
+                    msg: "갑자기 짜증이 치밀어 올라 소리를 질렀습니다! 주변의 이목을 끕니다.", 
+                    effect: () => { char.states.fear += 20; SoundManager.playAlert(); },
+                    type: "zombie" 
+                },
+                { 
+                    msg: "배고픔을 참지 못하고 비상 식량을 몰래 꺼내 먹었습니다.", 
+                    effect: () => { if(char.inventory.food > 0) char.inventory.food--; char.states.hunger = Math.max(0, char.states.hunger - 30); },
+                    type: "rest"
+                },
+                { 
+                    msg: "근거 없는 자신감에 차서 무기를 험하게 휘두르다 내구도를 깎아먹었습니다.", 
+                    effect: () => { if(char.inventory.weapon.dur > 0) char.inventory.weapon.dur--; },
+                    type: "hazard"
+                }
+            ];
+            
+            const action = impulsiveActions[Math.floor(Math.random() * impulsiveActions.length)];
+            const entry = log(`<div class="log-entry zombie" style="border-left-color: #f39c12; background: rgba(243, 156, 18, 0.1);">
+                <span class="log-char-name">⚡ 돌발 행동: ${char.name}</span>
+                <div class="log-situation">${action.msg}</div>
+            </div>`);
+            
+            action.effect();
+            await sleep(800);
+
+            // **NEW**: 충동적인 행동으로 인한 동료 신뢰도 하락
+            let trustAffected = false;
+            characters.forEach(otherChar => {
+                if (otherChar.id !== char.id && otherChar.states.status === 'alive') {
+                    const currentTrust = otherChar.trust[char.id] || 50;
+                    const trustDecrease = 10 + (impulseVal * 0.5); // 충동 스탯이 높을수록 더 많이 감소
+                    otherChar.trust[char.id] = Math.max(0, currentTrust - trustDecrease);
+                    char.trust[otherChar.id] = Math.max(0, (char.trust[otherChar.id] || 50) - (trustDecrease * 0.5)); // 자신도 상대방에 대한 신뢰도 소폭 감소
+                    trustAffected = true;
+                }
+            });
+            if (trustAffected) {
+                entry.innerHTML += `<div class="log-result" style="color: #e74c3c;">👥 ${char.name}의 돌발 행동으로 인해 동료들의 신뢰도가 하락했습니다.</div>`;
+            }
+            
+            // 돌발 행동 후에는 일반 이벤트 확률을 절반으로 줄여서 진행하거나 종료
+            if (Math.random() > 0.5) {
+                updateStatusBoard();
+                return; 
+            }
+        }
+
         let type = '';
 
         // 환경 보정된 이벤트 확률
@@ -2332,6 +2417,17 @@
         switch(type) {
             case 'zombie':
                 SoundManager.playAlert();
+
+                // **NEW**: 매우 높은 행운으로 좀비 습격을 기적적으로 회피
+                const luckAvoidChance = (char.stats['행운'] || 5) * 2.5; // 행운 10일 때 25%
+                if (char.stats['행운'] >= 8 && Math.random() * 100 < luckAvoidChance) {
+                    entry.innerHTML += `<div class="log-situation">✨ ${room}에서 좀비 무리와 마주쳤지만, 기적적으로 아무도 눈치채지 못했습니다!</div>`;
+                    entry.innerHTML += `<div class="log-result" style="color: var(--success-color);">🍀 엄청난 행운으로 위기를 모면했습니다.</div>`;
+                    char.states.fear = Math.max(0, char.states.fear - 10); // 안도감으로 공포 소폭 감소
+                    await sleep(800);
+                    break; // 좀비 이벤트 처리 종료
+                }
+
                 // 두려움 수치가 너무 높으면 패닉 발생
                 if (char.states.fear > 85 && Math.random() < 0.7) {
                     entry.innerHTML += `<div class="log-situation" style="color: var(--accent-color);">😱 ${char.name}은(는) 공포에 질려 비명을 지르며 제자리에 주저앉았다!</div>`;
@@ -2407,17 +2503,21 @@
                 entry.innerHTML += `<div class="log-situation">🔍 ${room}에서 쓸만한 물건을 찾기 위해 주변을 샅샅이 뒤졌다.</div>`;
                 entry.innerHTML += `<div class="log-dialogue">${getDialogue('search', char)}</div>`;
                 await sleep(400);
+                
+                // 행운 스탯에 따른 희귀 아이템 보너스 계산
+                const luckVal = char.stats['행운'] || 5;
+                const rareBonus = (luckVal - 5) * 2.5; // 행운 10일 때 +12.5%
                 const searchChance = calculateProbability('search', char, selectedLoc).successChance;
+                
                 if (Math.random() * 100 < searchChance) {
                     SoundManager.playSuccess();
-
                     const findRand = Math.random() * 100;
-                    if (findRand < 10) {
+                    if (findRand < (10 + rareBonus)) { // 행운이 높을수록 구급상자 확률 증가
                         char.inventory.medkit++;
-                        entry.innerHTML += `<div class="log-result" style="color: #f1c40f;">🩹 구급 상자를 확보했다!</div>`;
-                    } else if (findRand < 25) {
+                        entry.innerHTML += `<div class="log-result" style="color: #f1c40f;">✨ [희귀] 행운이 따랐습니다! 구급 상자를 확보했다!</div>`;
+                    } else if (findRand < (30 + rareBonus)) {
                         char.inventory.food++;
-                        entry.innerHTML += `<div class="log-result" style="color: var(--info-color);">🍞 통조림을 하나 발견했다.</div>`;
+                        entry.innerHTML += `<div class="log-result" style="color: var(--info-color);">🍞 식량을 확보했습니다.</div>`;
                     } else if (findRand < 40) {
                         char.inventory.water++;
                         entry.innerHTML += `<div class="log-result" style="color: var(--info-color);">💧 깨끗한 물 한 병을 얻었다.</div>`;
